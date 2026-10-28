@@ -1,0 +1,15 @@
+rss:
+  - name: LTN
+    url: https://news.ltn.com.tw/rss/politics.xml
+
+  - name: TVBS
+    url: https://news.tvbs.com.tw/rss/politics/12
+
+  - name: SET
+    url: https://www.setn.com/RSS.aspx?PageGroupID=6
+
+  - name: UDN
+    url: https://udn.com/rssfeed/news/2/6638?ch=news
+
+  - name: FTV
+    url: https://www.ftvnews.com.tw/rss/politics

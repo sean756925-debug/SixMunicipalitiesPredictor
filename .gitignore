@@ -1,0 +1,29 @@
+# Python
+venv/
+.venv/
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+
+# Secrets and local configuration
+.env
+.env.*
+!.env.example
+.streamlit/secrets.toml
+.claude/
+
+# Local runtime tools and artifacts
+cloudflared-linux
+*.log
+perf.txt
+backups/
+*.bak
+*.before_anchor_nav_*
+
+# OS / editor
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/

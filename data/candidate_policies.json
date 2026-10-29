@@ -1,0 +1,492 @@
+{
+  "updated_at": "2026-10-29",
+  "disclaimer": "本站整理公開資料，不代表人物均已完成候選人登記；「近期公開主張」與「現任施政重點」不等於正式競選政見。",
+  "people": [
+    {
+      "city": "台北市",
+      "name": "蔣萬安",
+      "status": "正式政見",
+      "summary": "尋求連任，近期主軸集中於都市更新、交通與城市空間再造。",
+      "items": [
+        {
+          "title": "松山機場遷建",
+          "content": "主張配合桃園機場擴建期程，與中央盤點松山機場遷建及交通配套。",
+          "source_name": "中央社",
+          "source_url": "https://www.cna.com.tw/news/aipl/202610190097.aspx"
+        },
+        {
+          "title": "都更5099",
+          "content": "提出降低都更同意門檻、提高大街廓基準容積，盼加速老舊社區更新。",
+          "source_name": "臺北市政府",
+          "source_url": "https://news.google.com/rss/articles/CBMioAFBVV95cUxPcE1pcVFuYTRfNkhUV19QWDQwejlTNGd4OGRHNDZqd0lEOHZ1TTc3NjFlV2hPdFRQd1g1eVFSeHR2MDMtSXlsRnJlU2FTbTM1cWVmZ0dDbHVob2hOYi04MEt3TzFySGVLREpNbGJ1X2lzRzZtMVBiUXZSOUdIb21uWVRidS05U3NOZW9Wa3p6SU1vV1h0eVcyRm9sVnpXVXg4?oc=5"
+        },
+        {
+          "title": "延續公辦都更",
+          "content": "以南機場整宅等案例，主張持續推動公辦都更與老舊聚落改善。",
+          "source_name": "中央社",
+          "source_url": "https://www.cna.com.tw/news/aloc/202610130113.aspx"
+        }
+      ],
+      "note": "松機遷建涉及中央權責；既有施政不等同全新政見。"
+    },
+    {
+      "city": "台北市",
+      "name": "沈伯洋",
+      "status": "正式政見",
+      "summary": "政策涵蓋水治理、兒童安全、反毒與都會區交通合作。",
+      "items": [
+        {
+          "title": "台北水文化復興",
+          "content": "提出親水、美感、潔淨、滯洪、生態五大方向，納入微型滯洪與降溫。",
+          "source_name": "中央社",
+          "source_url": "https://www.cna.com.tw/news/aipl/202610260106.aspx"
+        },
+        {
+          "title": "護童SOP",
+          "content": "主張兒虐通報即介入、專責單位獨立列案，並強化幼照監視與退場規範。",
+          "source_name": "中央社",
+          "source_url": "https://www.cna.com.tw/news/aloc/202610170177.aspx"
+        },
+        {
+          "title": "公共衛生導向反毒",
+          "content": "將成癮治療、減害與追蹤管理納入反毒政策，而非只採刑罰手段。",
+          "source_name": "中央社",
+          "source_url": "https://www.cna.com.tw/news/aloc/202610030206.aspx"
+        }
+      ],
+      "note": "反毒方案曾被選戰語言簡化，本站僅摘要政策原意。"
+    },
+    {
+      "city": "新北市",
+      "name": "李四川",
+      "status": "正式政見",
+      "summary": "以軌道交通、AI產業、醫療量能及高齡照護為主軸。",
+      "items": [
+        {
+          "title": "大漢溪捷運縱貫線",
+          "content": "規劃串聯三重、新莊、塭仔圳、土城、樹林與三峽等地區。",
+          "source_name": "中央社",
+          "source_url": "https://www.cna.com.tw/news/aloc/202610030114.aspx"
+        },
+        {
+          "title": "AI科技產業廊帶",
+          "content": "主張擴增產業用地並搭配交通建設，吸引AI與高科技產業。",
+          "source_name": "中央社",
+          "source_url": "https://www.cna.com.tw/news/aipl/202610210358.aspx"
+        },
+        {
+          "title": "高齡與長照支持",
+          "content": "提出銀髮居安、失智照護及高齡生活支持措施。",
+          "source_name": "自由時報",
+          "source_url": "https://news.ltn.com.tw/news/politics/breakingnews/5621666"
+        }
+      ],
+      "note": "大型軌道及產業用地仍需可行性、環評、中央核定與財源評估。"
+    },
+    {
+      "city": "新北市",
+      "name": "蘇巧慧",
+      "status": "正式政見",
+      "summary": "主打淡海AI產業、都更行政改革、社宅與兒童友善城市。",
+      "items": [
+        {
+          "title": "淡海AI產業鏈",
+          "content": "主張以淡海科學城串聯北士科、內科與南港軟體園區。",
+          "source_name": "中央社",
+          "source_url": "https://www.cna.com.tw/news/aipl/202610260109.aspx"
+        },
+        {
+          "title": "成立都市更新局",
+          "content": "設置單一窗口統籌跨局處審議，簡化流程並推動車站周邊街廓更新。",
+          "source_name": "中央社",
+          "source_url": "https://www.cna.com.tw/news/aloc/202608190269.aspx"
+        },
+        {
+          "title": "友善兒童城市",
+          "content": "提出兒童公共空間、照顧與安全政策，讓家庭能兼顧工作與育兒。",
+          "source_name": "公視",
+          "source_url": "https://news.google.com/rss/articles/CBMiT0FVX3lxTFBvWnM4Q3lvY09oNjdIeDJ6Ty1HVlhQR0FDMTBmSGlobTd0Qi05RENha3F3YzhLaG5ENkx3bUI4VFlteFFhLWRVM0w0TXdXaTA?oc=5"
+        }
+      ],
+      "note": "AI園區、社宅與育兒政策的土地、預算和期程仍待完整政見書。"
+    },
+    {
+      "city": "新北市",
+      "name": "黃國昌",
+      "status": "近期公開主張",
+      "summary": "曾提出新北政策方案；退出整合競爭後，這些不再是現任候選人承諾。",
+      "items": [
+        {
+          "title": "社區家醫網",
+          "content": "曾主張建立社區家庭醫師網絡，並改善護理人員待遇。",
+          "source_name": "中央社",
+          "source_url": "https://www.cna.com.tw/news/aloc/202604010297.aspx"
+        },
+        {
+          "title": "社宅3.1萬戶",
+          "content": "曾設定2034年新北社宅達3.1萬戶的供給目標。",
+          "source_name": "中央社",
+          "source_url": "https://www.cna.com.tw/news/aloc/202603250193.aspx"
+        },
+        {
+          "title": "都更百日發照",
+          "content": "曾主張提高都更行政效率，並建立透明容積資訊平台。",
+          "source_name": "中央社",
+          "source_url": "https://www.cna.com.tw/news/aipl/202602060205.aspx"
+        }
+      ],
+      "note": "黃國昌已退出新北市長整合競爭，不可視為目前正式候選人政見。"
+    },
+    {
+      "city": "桃園市",
+      "name": "張善政",
+      "status": "現任施政重點",
+      "summary": "目前公開主軸以延續既有市政與未完成工程為主。",
+      "items": [
+        {
+          "title": "捷運橘線",
+          "content": "可行性報告已送交通部，規劃優先推動平鎮與龍潭段。",
+          "source_name": "中央社",
+          "source_url": "https://www.cna.com.tw/news/aloc/202610280147.aspx"
+        },
+        {
+          "title": "市立醫院增設分院",
+          "content": "規劃在大園、蘆竹增設分院，補足航空城與北桃園醫療量能。",
+          "source_name": "中央社",
+          "source_url": "https://www.cna.com.tw/news/ahel/202610280221.aspx"
+        },
+        {
+          "title": "社宅萬戶目標",
+          "content": "推動大溪、新屋等社宅，目標2030年達一萬戶。",
+          "source_name": "中央社",
+          "source_url": "https://www.cna.com.tw/news/aloc/202603250205.aspx"
+        }
+      ],
+      "note": "多數為現任市府既有計畫，不宜全部稱為全新連任政見。"
+    },
+    {
+      "city": "桃園市",
+      "name": "彭紹瑾",
+      "status": "近期公開主張",
+      "summary": "尚未查得完整桃園市政綱領；近期公開發言偏向軍警待遇與監察制度。",
+      "items": [
+        {
+          "title": "落實軍警加薪",
+          "content": "主張立法院既已通過軍人加薪規定，行政機關應依法編列與執行。",
+          "source_name": "聯合報",
+          "source_url": "https://news.google.com/rss/articles/CBMiU0FVX3lxTE12QUFhN1k4YWNTdTBwSUMyOHFHaFowZUIwTk9ZbDJIWFp0WVgwM1dlNUxscXF4Zi1VSHFvc0ZQNG84RDI2VE04MGgzN3VhR0M0RVZR0gFYQVVfeXFMT0lXNVN6aWk2RnR6b2tITWtReDQyU3JjT2J3YUFVMWhpOHRPNnBEbDRPZHJFZzljOTd6RXpLekJRY1k1bG5BTGtjSldrM1QwbEdQa1JDay1vTw?oc=5"
+        },
+        {
+          "title": "維持監察職能",
+          "content": "認為糾正、彈劾與人權監督等職能仍須由明確機關承接。",
+          "source_name": "中央社搜尋",
+          "source_url": "https://www.cna.com.tw/search/hysearchws.aspx?q=%E5%BD%AD%E7%B4%B9%E7%91%BE"
+        },
+        {
+          "title": "桃園政見尚待公布",
+          "content": "目前未找到可核實的完整2026桃園市長政策白皮書。",
+          "source_name": "Google News",
+          "source_url": "https://news.google.com/search?q=%E5%BD%AD%E7%B4%B9%E7%91%BE%20%E6%A1%83%E5%9C%92%20%E6%94%BF%E8%A6%8B&hl=zh-TW&gl=TW&ceid=TW%3Azh-Hant"
+        }
+      ],
+      "note": "前兩項為全國性制度發言，不是桃園市政政見。"
+    },
+    {
+      "city": "桃園市",
+      "name": "何志偉",
+      "status": "近期公開主張",
+      "summary": "曾提出育兒、長者、親子休閒及城市交通倡議，尚非最終完整政綱。",
+      "items": [
+        {
+          "title": "幼兒政策三支柱",
+          "content": "主張家庭、托育與公共支持共同分擔育兒責任。",
+          "source_name": "Google News",
+          "source_url": "https://news.google.com/search?q=%E4%BD%95%E5%BF%97%E5%81%89%20%E6%A1%83%E5%9C%92%20%E5%B9%BC%E5%85%92%20%E6%94%BF%E7%AD%96&hl=zh-TW&gl=TW&ceid=TW%3Azh-Hant"
+        },
+        {
+          "title": "大型兒童樂園",
+          "content": "提出在桃園打造大型兒童樂園，增加家庭型公共休閒設施。",
+          "source_name": "Google News",
+          "source_url": "https://news.google.com/search?q=%E4%BD%95%E5%BF%97%E5%81%89%20%E6%A1%83%E5%9C%92%20%E5%85%92%E7%AB%A5%E6%A8%82%E5%9C%92&hl=zh-TW&gl=TW&ceid=TW%3Azh-Hant"
+        },
+        {
+          "title": "長者假牙維修",
+          "content": "主張提供假牙維修補助，降低長者口腔照護負擔。",
+          "source_name": "Google News",
+          "source_url": "https://news.google.com/search?q=%E4%BD%95%E5%BF%97%E5%81%89%20%E5%81%87%E7%89%99%20%E7%B6%AD%E4%BF%AE%20%E8%A3%9C%E5%8A%A9&hl=zh-TW&gl=TW&ceid=TW%3Azh-Hant"
+        }
+      ],
+      "note": "屬個人政策倡議；成本、用地與財源仍待完整文件。"
+    },
+    {
+      "city": "桃園市",
+      "name": "王義川",
+      "status": "近期公開主張",
+      "summary": "以「桃園經濟學」討論國門經濟與區域治理，但未見完整正式政綱。",
+      "items": [
+        {
+          "title": "國門雙都心",
+          "content": "主張以航空城、機場與既有都會核心，重整桃園城市發展軸線。",
+          "source_name": "自由時報搜尋",
+          "source_url": "https://search.ltn.com.tw/list?keyword=%E7%8E%8B%E7%BE%A9%E5%B7%9D%20%E5%9C%8B%E9%96%80%E9%9B%99%E9%83%BD%E5%BF%83"
+        },
+        {
+          "title": "國門經濟",
+          "content": "把機場門戶、產業與交通視為整體，主張桃園不能只沿用傳統市區軸線。",
+          "source_name": "Google News",
+          "source_url": "https://news.google.com/search?q=%E7%8E%8B%E7%BE%A9%E5%B7%9D%20%E6%A1%83%E5%9C%92%E7%B6%93%E6%BF%9F%E5%AD%B8&hl=zh-TW&gl=TW&ceid=TW%3Azh-Hant"
+        },
+        {
+          "title": "北北基桃整體戰略",
+          "content": "認為北北基桃交通、產業與生活圈治理應整體評估。",
+          "source_name": "Google News",
+          "source_url": "https://news.google.com/search?q=%E7%8E%8B%E7%BE%A9%E5%B7%9D%20%E5%8C%97%E5%8C%97%E5%9F%BA%E6%A1%83&hl=zh-TW&gl=TW&ceid=TW%3Azh-Hant"
+        }
+      ],
+      "note": "公開論述不等同正式參選政綱，具體範圍與財源待確認。"
+    },
+    {
+      "city": "桃園市",
+      "name": "黃世杰",
+      "status": "正式政見",
+      "summary": "已提出交通、育兒、醫護安居、青年與城市經濟等競選主張。",
+      "items": [
+        {
+          "title": "公車與交通新治理",
+          "content": "主張改善公車路網、班次及便利性，並檢討捷運建設配套。",
+          "source_name": "聯合報",
+          "source_url": "https://news.google.com/rss/articles/CBMiU0FVX3lxTFA0QU9fdzNVLWx6MWhlaFVsczhVMnFOT05VUGVMRlJhSHB3UmgyX1ZyWU5jVlgyVlk4aDVPTGJkWGN2THozS2F2cXFnV3dDWEdmdko40gFYQVVfeXFMTW1Qd2VVaVhuVUlnUmlhZWVBRTc3UGdLankwdDl6b0djbVNjZW1Zb1JJLWM1Q0xDNlVwWThxN1BLbGZWb2d4UHNsUW9iQWZmQlg5blpLTDRwYg?oc=5"
+        },
+        {
+          "title": "友善育兒",
+          "content": "將托育與家庭支持列為政策，訴求降低家庭育兒負擔。",
+          "source_name": "Google News",
+          "source_url": "https://news.google.com/search?q=%E9%BB%83%E4%B8%96%E6%9D%B0%20%E6%A1%83%E5%9C%92%20%E5%8F%8B%E5%96%84%E8%82%B2%E5%85%92&hl=zh-TW&gl=TW&ceid=TW%3Azh-Hant"
+        },
+        {
+          "title": "醫護安居與青年支持",
+          "content": "提出醫護居住支持及青年就業、居住與城市參與政策。",
+          "source_name": "Google News",
+          "source_url": "https://news.google.com/search?q=%E9%BB%83%E4%B8%96%E6%9D%B0%20%E9%86%AB%E8%AD%B7%E5%AE%89%E5%B1%85%20%E9%9D%92%E5%B9%B4&hl=zh-TW&gl=TW&ceid=TW%3Azh-Hant"
+        }
+      ],
+      "note": "媒體摘要未必含完整財源、期程與量化指標。"
+    },
+    {
+      "city": "桃園市",
+      "name": "彭啟明",
+      "status": "現任施政重點",
+      "summary": "可核實主張主要來自環境部長任內，並非桃園市長正式政見。",
+      "items": [
+        {
+          "title": "碳費與低碳轉型",
+          "content": "以碳定價促進產業減碳，並搭配轉型支持措施。",
+          "source_name": "環境部",
+          "source_url": "https://www.moenv.gov.tw/"
+        },
+        {
+          "title": "綠色金融",
+          "content": "主張以金融工具引導資金投入淨零與永續產業。",
+          "source_name": "環境部",
+          "source_url": "https://www.moenv.gov.tw/"
+        },
+        {
+          "title": "自然正成長與減塑",
+          "content": "支持生物多樣性、自然復育及源頭減塑政策。",
+          "source_name": "中央社",
+          "source_url": "https://news.google.com/rss/articles/CBMiX0FVX3lxTE1MMWJ5UnFCUUVOYTN5MFNTM1lUdWhJLS03ZkJ3RnEtclU5clRhdVJaSGxYN202OHVUc0FQM29IX1NJdkZRZmMyUTlvSXFNYWxpaEtwakdjWjRfVGRUeGtJ?oc=5"
+        }
+      ],
+      "note": "上述是中央環境施政，不應標成桃園市長政見。"
+    },
+    {
+      "city": "桃園市",
+      "name": "張惇涵",
+      "status": "尚待公布",
+      "summary": "未查得個人桃園市長政見；目前內容多為行政院政策說明或助選發言。",
+      "items": [
+        {
+          "title": "支持交通新治理",
+          "content": "曾公開支持黃世杰提出的桃園交通新治理；該方案歸屬黃世杰。",
+          "source_name": "ETtoday",
+          "source_url": "https://news.google.com/rss/articles/CBMiXkFVX3lxTE5JQVlJOHMwQ2RkelhPZ2tYbFVJZUEzMk9RN2VPOXUzTGlFajdTREFxb0QyRUMxb3RMdXJ0ekxhVjFLYlpFb1VVWTBzNEFuNUVLRkdXdm81UW9DcnE1RGfSAUtBVV95cUxPdEJlM1k4U1NfelpRNU1nRElFamY4Z0RPeGhKZlA1MFJxeEo5UXJLaUVQN0J3Y2Q0a1p6TFNHQkJuUFVfOWlRMVJoYjg?oc=5"
+        },
+        {
+          "title": "中央政策說明",
+          "content": "近期公開發言多屬行政院集體政策說明，不能視為個人市政承諾。",
+          "source_name": "行政院",
+          "source_url": "https://www.ey.gov.tw/"
+        },
+        {
+          "title": "桃園政見尚待公布",
+          "content": "目前未找到可核實的完整個人桃園市長政策白皮書。",
+          "source_name": "Google News",
+          "source_url": "https://news.google.com/search?q=%E5%BC%B5%E6%83%87%E6%B6%B5%20%E6%A1%83%E5%9C%92%20%E6%94%BF%E8%A6%8B&hl=zh-TW&gl=TW&ceid=TW%3Azh-Hant"
+        }
+      ],
+      "note": "助選發言與行政院政策不等於個人政見。"
+    },
+    {
+      "city": "台中市",
+      "name": "江啟臣",
+      "status": "正式政見",
+      "summary": "以智慧科技導入交通、城市安全、產業與觀光治理。",
+      "items": [
+        {
+          "title": "交通智慧時代",
+          "content": "提出AI號誌、捷運多線推進、雙港升級與公共運輸整合。",
+          "source_name": "匯流新聞網",
+          "source_url": "https://news.google.com/rss/articles/CBMiSkFVX3lxTE9DdXBhNjlUWVhjX1VfQ1VqTVlhbktCQ1djZXZBc2N5a09aMVdmMnJKT19LQmtTazltYld1SmplN0ZjMDlBUUIzOGJ3?oc=5"
+        },
+        {
+          "title": "台中智慧安全網",
+          "content": "主張以城市資料與AI強化預警、應變及治安防護。",
+          "source_name": "聯合報",
+          "source_url": "https://news.google.com/rss/articles/CBMiU0FVX3lxTE5YQ2wtWXRna2t5MkgxTnVpTG5JckxlbUtxTVQ3ck82THk3VnJpdVBwdWlJT0djcU4wWHprVmFFbE5xWGc0cmhReUhhUXNGRUZ5cFJn0gFYQVVfeXFMT1VyYndzRjBoT0pHTjN6RlY4R2g4RnVic3dsTkVRMC12c3RLeVFaajByVDlnN1ltTXA1azU2ZUdXZlVRTk5FeUNaMUV6cWd0c3Y3RkhaWjV2YQ?oc=5"
+        },
+        {
+          "title": "區域觀光整合",
+          "content": "提出智慧旅遊、跨縣市遊程與區域品牌整合。",
+          "source_name": "Google News",
+          "source_url": "https://news.google.com/search?q=%E6%B1%9F%E5%95%9F%E8%87%A3%20%E8%A7%80%E5%85%89%E4%B8%89%E8%BB%B8%20%E5%85%AD%E5%A4%A7%E6%97%97%E8%89%A6&hl=zh-TW&gl=TW&ceid=TW%3Azh-Hant"
+        }
+      ],
+      "note": "大型交通計畫的財源、期程與資料治理規範仍待完整白皮書。"
+    },
+    {
+      "city": "台中市",
+      "name": "何欣純",
+      "status": "正式政見",
+      "summary": "主打青年治理、全齡福利、公共運輸與屯區文化發展。",
+      "items": [
+        {
+          "title": "青年局與創業支持",
+          "content": "承諾成立青年局、設青創基地並提供創業融資支持。",
+          "source_name": "Google News",
+          "source_url": "https://news.google.com/search?q=%E4%BD%95%E6%AC%A3%E7%B4%94%20%E9%9D%92%E5%B9%B4%E5%B1%80%20%E5%89%B5%E6%A5%AD%E8%B2%B8%E6%AC%BE&hl=zh-TW&gl=TW&ceid=TW%3Azh-Hant"
+        },
+        {
+          "title": "六星級福利",
+          "content": "提出全齡福利政策，並主張推動海線鐵路雙軌與高架化。",
+          "source_name": "聯合報",
+          "source_url": "https://news.google.com/rss/articles/CBMiWEFVX3lxTE1vMEhucDBnR2sxdE0tZjNqS2NDcFFXNUV2QzR6YzVsTlZyN2FSbGJMYkp3dUJUaW9rQ3FzUzZKVnhQRmJpQ19ualBLUjljVzZIR1NHcV9wZ0U?oc=5"
+        },
+        {
+          "title": "屯區文創空間",
+          "content": "希望以複合式文創空間帶動屯區文化與產業發展。",
+          "source_name": "Google News",
+          "source_url": "https://news.google.com/search?q=%E4%BD%95%E6%AC%A3%E7%B4%94%20%E5%85%AD%E6%98%9F%E6%96%B0%E5%B1%AF%E5%8D%80%20%E6%96%87%E5%89%B5&hl=zh-TW&gl=TW&ceid=TW%3Azh-Hant"
+        }
+      ],
+      "note": "貸款、鐵路高架化及福利方案的財務估算仍待核對。"
+    },
+    {
+      "city": "台南市",
+      "name": "謝龍介",
+      "status": "正式政見",
+      "summary": "聚焦青年婚育住宅、農漁產業升級與高齡福利。",
+      "items": [
+        {
+          "title": "婚育宅",
+          "content": "主張以地上權等方式興辦婚育宅，四年目標約8000戶。",
+          "source_name": "Google News",
+          "source_url": "https://news.google.com/search?q=%E8%AC%9D%E9%BE%8D%E4%BB%8B%20%E5%A9%9A%E8%82%B2%E5%AE%85%208000&hl=zh-TW&gl=TW&ceid=TW%3Azh-Hant"
+        },
+        {
+          "title": "農漁三箭",
+          "content": "提出清查光電使用、建置現代冷鏈及加強農漁產品外銷。",
+          "source_name": "Google News",
+          "source_url": "https://news.google.com/search?q=%E8%AC%9D%E9%BE%8D%E4%BB%8B%20%E8%BE%B2%E6%BC%81%E4%B8%89%E7%AE%AD&hl=zh-TW&gl=TW&ceid=TW%3Azh-Hant"
+        },
+        {
+          "title": "敬老卡加碼",
+          "content": "主張提高台南敬老卡額度，擴大長者交通與生活支持。",
+          "source_name": "Google News",
+          "source_url": "https://news.google.com/search?q=%E8%AC%9D%E9%BE%8D%E4%BB%8B%20%E6%95%AC%E8%80%81%E5%8D%A1%201000&hl=zh-TW&gl=TW&ceid=TW%3Azh-Hant"
+        }
+      ],
+      "note": "婚育宅土地、價格、資格與財源仍待最終政策書。"
+    },
+    {
+      "city": "台南市",
+      "name": "陳亭妃",
+      "status": "正式政見",
+      "summary": "以全齡福利、兒童友善、青年治理與生育支持為主軸。",
+      "items": [
+        {
+          "title": "福利六都齊",
+          "content": "主張補齊台南相較其他直轄市不足的福利，建立全齡照顧網。",
+          "source_name": "Google News",
+          "source_url": "https://news.google.com/search?q=%E9%99%B3%E4%BA%AD%E5%A6%83%20%E7%A6%8F%E5%88%A9%E5%85%AD%E9%83%BD%E9%BD%8A&hl=zh-TW&gl=TW&ceid=TW%3Azh-Hant"
+        },
+        {
+          "title": "10分鐘遊戲圈",
+          "content": "規劃讓兒童在住家附近10分鐘內抵達安全遊戲空間。",
+          "source_name": "聯合報",
+          "source_url": "https://news.google.com/rss/articles/CBMiWEFVX3lxTE5jb3AzbHVtNG9Nc3NxZGhmMkZoQ0lzVE94Mm0tTXFhSW0zc1lOclhNOUtqcWNhT3ZuVTI5VURlVmlOTG5yWkNzWnV1TllUREdUNDFMYklTYkw?oc=5"
+        },
+        {
+          "title": "青年局與生育支持",
+          "content": "承諾成立青年局，並提出凍卵補助與臨時托育等措施。",
+          "source_name": "Google News",
+          "source_url": "https://news.google.com/search?q=%E9%99%B3%E4%BA%AD%E5%A6%83%20%E9%9D%92%E5%B9%B4%E5%B1%80%20%E5%87%8D%E5%8D%B5%20%E8%87%A8%E6%99%82%E6%89%98%E8%82%B2&hl=zh-TW&gl=TW&ceid=TW%3Azh-Hant"
+        }
+      ],
+      "note": "福利項目資格、財源與醫療補助規範仍待逐項確認。"
+    },
+    {
+      "city": "高雄市",
+      "name": "柯志恩",
+      "status": "正式政見",
+      "summary": "以可負擔住宅、空污改善、工安與文化產業為主軸。",
+      "items": [
+        {
+          "title": "社宅3.5萬戶",
+          "content": "主張擴大社宅供給，地方自辦5000戶，並提高婚育宅比率。",
+          "source_name": "Google News",
+          "source_url": "https://news.google.com/search?q=%E6%9F%AF%E5%BF%97%E6%81%A9%20%E7%A4%BE%E5%AE%85%203.5%E8%90%AC%E6%88%B6&hl=zh-TW&gl=TW&ceid=TW%3Azh-Hant"
+        },
+        {
+          "title": "空污三策",
+          "content": "主張燃煤機組除役後不復活、老舊燃氣機組不延役，並推動污染減量。",
+          "source_name": "聯合報",
+          "source_url": "https://news.google.com/rss/articles/CBMiWEFVX3lxTE9md2ZGMThJTUJ0WDFweHJLTHlXbUg5N0RhMlQ3RzVQUXJIeG1rN1hHaUlPWUxHOHdzQUNFb1ZIcDRweU80dlBxZUNjRXJPT2pWbTlJQ3I0Rlk?oc=5"
+        },
+        {
+          "title": "科技工安",
+          "content": "主張科技防災，並將企業工安紀錄納入政府標案評選。",
+          "source_name": "Google News",
+          "source_url": "https://news.google.com/search?q=%E6%9F%AF%E5%BF%97%E6%81%A9%20%E7%A7%91%E6%8A%80%E5%B7%A5%E5%AE%89%20%E6%A8%99%E6%A1%88&hl=zh-TW&gl=TW&ceid=TW%3Azh-Hant"
+        }
+      ],
+      "note": "社宅含中央與地方供給；能源機組涉及中央調度權責。"
+    },
+    {
+      "city": "高雄市",
+      "name": "賴瑞隆",
+      "status": "正式政見",
+      "summary": "主張延續市政並擴張捷運、文化、教育與青年支持。",
+      "items": [
+        {
+          "title": "七線彩虹捷運",
+          "content": "提出多線捷運路網構想，串聯既有與規劃中的運輸路線。",
+          "source_name": "Google News",
+          "source_url": "https://news.google.com/search?q=%E8%B3%B4%E7%91%9E%E9%9A%86%20%E4%B8%83%E7%B7%9A%E5%BD%A9%E8%99%B9%E6%8D%B7%E9%81%8B&hl=zh-TW&gl=TW&ceid=TW%3Azh-Hant"
+        },
+        {
+          "title": "文化高雄・世界舞台",
+          "content": "提出扶植在地創作、人才與文化產業，讓高雄作品進入國際市場。",
+          "source_name": "Google News",
+          "source_url": "https://news.google.com/search?q=%E8%B3%B4%E7%91%9E%E9%9A%86%20%E6%96%87%E5%8C%96%E9%AB%98%E9%9B%84%20%E4%B8%96%E7%95%8C%E8%88%9E%E5%8F%B0&hl=zh-TW&gl=TW&ceid=TW%3Azh-Hant"
+        },
+        {
+          "title": "教育減量與小班化",
+          "content": "主張縮小班級規模、行政減量並增加教育資源。",
+          "source_name": "Google News",
+          "source_url": "https://news.google.com/search?q=%E8%B3%B4%E7%91%9E%E9%9A%86%20%E6%95%99%E8%82%B2%20%E5%B0%8F%E7%8F%AD%E5%8C%96%20%E8%A1%8C%E6%94%BF%E6%B8%9B%E9%87%8F&hl=zh-TW&gl=TW&ceid=TW%3Azh-Hant"
+        }
+      ],
+      "note": "捷運各線成熟度與經費不同；文化教育計畫仍待完整KPI。"
+    }
+  ]
+}

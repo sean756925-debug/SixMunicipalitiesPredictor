@@ -22,6 +22,7 @@ RAW_DIR = BASE_DIR / "data" / "raw"
 FORECAST_DIR = BASE_DIR / "data" / "forecast"
 PLOT_DIR = BASE_DIR / "data" / "plots"
 KEYWORDS_YAML = BASE_DIR / "config" / "keywords.yaml"
+POLICIES_JSON = BASE_DIR / "data" / "candidate_policies.json"
 
 TOPIC_RULES = {
     "選戰攻防": r"選舉|參選|提名|初選|選戰|民調|造勢|競選|藍綠|國民黨|民進黨|民眾黨|黨內|辯論|罷免",
@@ -40,6 +41,14 @@ st.set_page_config(
     layout="wide",
     initial_sidebar_state="collapsed",
 )
+
+theme_space, theme_control = st.columns([7.5, 2.5])
+with theme_control:
+    dark_mode = st.toggle(
+        "🌙 深色模式",
+        key="dark_mode",
+        help="切換網站的明亮／深色顯示模式",
+    )
 
 st.markdown(
     """
@@ -105,6 +114,13 @@ h1,h2,h3 { letter-spacing:-.035em; color:var(--ink); }
 [data-testid="stMetric"] { background:white; border:1px solid var(--line); padding:13px 15px; border-radius:18px; }
 [data-testid="stTabs"] button { font-weight:700; }
 .small { color:var(--muted); font-size:13px; line-height:1.65; }
+.policy-intro { background:white; border:1px solid var(--line); border-radius:20px; padding:18px 20px; margin:10px 0 16px; }
+.policy-status { display:inline-block; border-radius:999px; padding:5px 10px; margin-bottom:8px; background:#ede9fe; color:#5b21b6; font-size:12px; font-weight:800; }
+.policy-card { background:white; border:1px solid var(--line); border-radius:18px; padding:17px; min-height:190px; }
+.policy-card h4 { color:var(--ink); font-size:17px; margin:0 0 9px; }
+.policy-card p { color:var(--muted); font-size:14px; line-height:1.6; min-height:68px; }
+.policy-card a { color:var(--violet2) !important; font-size:13px; font-weight:750; text-decoration:none !important; }
+.policy-note { color:var(--muted); background:#f5f4f7; border-radius:13px; padding:11px 13px; font-size:12px; line-height:1.55; margin-top:12px; }
 @media(max-width:700px){
   .hero{padding:24px 20px}.block-container{padding-left:1rem;padding-right:1rem;padding-bottom:7rem}.story{min-height:auto}
   .hero .chips { display:flex; flex-wrap:nowrap; overflow-x:auto; padding-bottom:5px; scrollbar-width:thin;
@@ -126,6 +142,29 @@ h1,h2,h3 { letter-spacing:-.035em; color:var(--ink); }
     unsafe_allow_html=True,
 )
 
+if dark_mode:
+    st.markdown(
+        """
+<style>
+:root { --ink:#f4f0ff; --muted:#b9b2c8; --line:#40384d; --paper:#17131d; --violet2:#c4b5fd; }
+.stApp { background:linear-gradient(180deg,#1c1329 0,#120f16 440px); color:var(--ink); }
+[data-testid="stHeader"] { background:rgba(18,15,22,.88); }
+.story,.city-card,.headline,.policy-intro,.policy-card,[data-testid="stMetric"] { background:#211b29; }
+.section-nav a { background:#251d31; border-color:#514263; color:#ddd6fe !important; }
+.section-nav a:hover { background:#352643; }
+.callout { background:#2b2038; }
+.topic-pill { background:#3a2850; color:#ddd6fe; }
+.headline a { color:#f4f0ff; }
+.source,.policy-note { background:#2d2735; }
+.share-track { background:#40384d; }
+.fresh.ok { background:#12342b; border-color:#26735a; color:#a7f3d0; }
+.fresh.warn { background:#3d2818; border-color:#8f5d2b; color:#fed7aa; }
+@media(max-width:700px){.mobile-nav{background:rgba(24,19,30,.97);border-top-color:#514263}.mobile-nav a{color:#ddd6fe !important}}
+</style>
+""",
+        unsafe_allow_html=True,
+    )
+
 
 def file_mtime(path: Path) -> float:
     return path.stat().st_mtime if path.exists() else 0.0
@@ -136,6 +175,16 @@ def active_candidate_map() -> dict[str, list[str]]:
         return {}
     with KEYWORDS_YAML.open("r", encoding="utf-8") as f:
         return yaml.safe_load(f) or {}
+
+
+@st.cache_data(show_spinner=False)
+def load_policies(mtime: float) -> dict:
+    if not POLICIES_JSON.exists():
+        return {"updated_at": "", "disclaimer": "", "people": []}
+    with POLICIES_JSON.open("r", encoding="utf-8") as f:
+        data = json.load(f)
+    data["people"] = [p for p in data.get("people", []) if p.get("city") and p.get("name")]
+    return data
 
 
 @st.cache_data(show_spinner=False)
@@ -315,12 +364,15 @@ if not df.empty and active_pairs:
     df = df[df.apply(lambda r: (r["city"], r["candidate"]) in set(active_pairs), axis=1)].copy()
 raw_file = latest_raw_file()
 articles = load_articles(str(raw_file) if raw_file else "", file_mtime(raw_file) if raw_file else 0, active_pairs)
+policy_data = load_policies(file_mtime(POLICIES_JSON))
+policies = policy_data.get("people", [])
 
 with st.sidebar:
     st.header("資料狀態")
     st.write(f"追蹤城市：{len(candidate_map)}")
     st.write(f"追蹤人物：{len(active_pairs)}")
     st.write(f"新聞標題：{len(articles):,}")
+    st.write(f"政策人物：{len(policies)}")
     st.caption("公開唯讀版，不提供重新抓取或覆蓋資料的操作。")
     st.divider()
     st.caption("指標口徑：候選人在本系統收錄新聞中的提及次數；不代表支持、好感或投票意向。")
@@ -351,8 +403,8 @@ st.markdown(
   <a href="#top"><span>⌂</span>首頁</a>
   <a href="#overview"><span>▦</span>六都</a>
   <a href="#city"><span>⌁</span>城市</a>
+  <a href="#policies"><span>☷</span>政見</a>
   <a href="#news"><span>▤</span>新聞</a>
-  <a href="#method"><span>ⓘ</span>方法</a>
 </nav>
 """,
     unsafe_allow_html=True,
@@ -366,7 +418,7 @@ st.markdown(
   <p>掌握選戰正在談什麼：追蹤候選人新聞提及、城市對決、議題變化與帶動聲量的關鍵事件。</p>
   <div class="chips">
     {nav_chip("overview", "六都對決")}{nav_chip("city", "7 日媒體注意力")}
-    {nav_chip("news", "熱門議題")}{nav_chip("news", "關鍵新聞原文")}{nav_chip("method", "資料口徑與方法")}
+    {nav_chip("policies", "政見與公開主張")}{nav_chip("news", "熱門議題")}{nav_chip("news", "關鍵新聞原文")}{nav_chip("method", "資料口徑與方法")}
   </div>
 </div>
 """,
@@ -485,7 +537,47 @@ else:
         render_headlines(city_articles[city_articles["candidate"].isin(selected)] if not city_articles.empty else city_articles, 6)
 
 st.markdown(
-    "<div class='section-nav'><a href='#overview'>← 六都對決</a><a href='#top'>↑ 回頂端</a><a href='#news'>新聞議題 →</a></div>",
+    "<div class='section-nav'><a href='#overview'>← 六都對決</a><a href='#top'>↑ 回頂端</a><a href='#policies'>政見主張 →</a></div>",
+    unsafe_allow_html=True,
+)
+
+st.markdown("<div id='policies' class='section-anchor'></div>", unsafe_allow_html=True)
+st.subheader("政見與公開主張")
+st.caption("先看人物主張，再對照媒體注意力。本站區分正式政見、現任施政重點、近期公開主張與尚待公布，避免把所有發言都當成競選承諾。")
+if not policies:
+    st.info("目前沒有可顯示的政策資料。")
+else:
+    policy_cities = [c for c in candidate_map if any(p["city"] == c for p in policies)]
+    pc1, pc2 = st.columns(2)
+    with pc1:
+        policy_city = st.selectbox("政見城市", policy_cities, key="policy_city")
+    city_policies = [p for p in policies if p["city"] == policy_city]
+    with pc2:
+        policy_name = st.selectbox("選擇人物", [p["name"] for p in city_policies], key="policy_person")
+    person = next(p for p in city_policies if p["name"] == policy_name)
+    st.markdown(
+        f"<div class='policy-intro'><span class='policy-status'>{escape(person['status'])}</span>"
+        f"<h3>{escape(person['name'])}｜{escape(person['city'])}</h3>"
+        f"<div class='small'>{escape(person['summary'])}</div></div>",
+        unsafe_allow_html=True,
+    )
+    policy_cols = st.columns(min(3, max(1, len(person.get("items", [])))))
+    for index, item in enumerate(person.get("items", [])):
+        source_url = escape(str(item.get("source_url", "")), quote=True)
+        source_name = escape(str(item.get("source_name", "查看來源")))
+        source_link = f"<a href='{source_url}' target='_blank' rel='noopener'>來源：{source_name} ↗</a>" if source_url else ""
+        card = (
+            f"<div class='policy-card'><h4>{escape(item['title'])}</h4>"
+            f"<p>{escape(item['content'])}</p>{source_link}</div>"
+        )
+        with policy_cols[index % len(policy_cols)]:
+            st.markdown(card, unsafe_allow_html=True)
+    if person.get("note"):
+        st.markdown(f"<div class='policy-note'><b>閱讀提醒：</b>{escape(person['note'])}</div>", unsafe_allow_html=True)
+    st.caption(f"政策資料更新：{policy_data.get('updated_at', '未標示')}。{policy_data.get('disclaimer', '')}")
+
+st.markdown(
+    "<div class='section-nav'><a href='#city'>← 城市分析</a><a href='#top'>↑ 回頂端</a><a href='#news'>新聞議題 →</a></div>",
     unsafe_allow_html=True,
 )
 
@@ -529,6 +621,7 @@ st.markdown(
 - Google News 有搜尋結果上限與相關性擴張，累計數不適合當成長期人氣排行。
 - 議題分類來自標題關鍵字，可一篇多標籤；沒有進行情緒或立場判定。
 - 候選人名單是本站追蹤設定，不等於中選會正式登記或資格審定名單。
+- 政策頁依公開資料區分正式政見、現任施政重點、近期公開主張與尚待公布；摘要不等於候選人完整政見書。
 """
 )
 q1, q2, q3, q4 = st.columns(4)

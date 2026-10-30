@@ -51,7 +51,6 @@ with theme_control:
             ["紫羅蘭", "海洋藍", "深夜"],
             key="color_theme",
             label_visibility="collapsed",
-            help="選擇後會立即套用到背景、導覽、卡片與文字",
         )
 
 st.markdown(
@@ -64,6 +63,12 @@ st.markdown(
 }
 .stApp { background:linear-gradient(180deg,#f7f4ff 0,#fff 440px); color:var(--ink); }
 [data-testid="stHeader"] { background:rgba(255,255,255,.82); backdrop-filter:blur(14px); }
+[data-testid="stMainMenuButton"] { display:none !important; }
+[data-testid="stPopoverBody"] {
+  position:fixed !important; left:50% !important; right:auto !important; top:68px !important;
+  transform:translateX(-50%) !important; width:min(340px,calc(100vw - 24px)) !important;
+  max-width:calc(100vw - 24px) !important;
+}
 .block-container { max-width:1280px; padding-top:1.5rem; padding-bottom:4rem; }
 h1,h2,h3 { letter-spacing:-.035em; color:var(--ink); }
 .hero { background:linear-gradient(130deg,#23123d 0%,#4c1d95 55%,#6d28d9 100%); color:white;

@@ -12,6 +12,7 @@ import re
 from pathlib import Path
 from urllib.parse import urlparse
 
+import altair as alt
 import pandas as pd
 import streamlit as st
 import yaml
@@ -414,14 +415,44 @@ def city_matchups(snapshot: pd.DataFrame) -> list[dict]:
     return sorted(result, key=lambda x: x["gap"])
 
 
-def rolling_chart(frame: pd.DataFrame, city: str, candidates: list[str], days: int) -> pd.DataFrame:
-    part = frame[(frame["city"] == city) & frame["candidate"].isin(candidates)].copy()
-    if part.empty:
+def actual_and_forecast_rolling(
+    frame: pd.DataFrame, city: str, candidates: list[str], history_days: int = 28
+) -> pd.DataFrame:
+    """Join historical 7-day rolling mentions to a rolling forecast extension."""
+    rows: list[dict] = []
+    city_frame = frame[frame["city"] == city]
+    if city_frame.empty:
         return pd.DataFrame()
-    cutoff = part["date"].max() - pd.Timedelta(days=days - 1)
-    return part[part["date"] >= cutoff].pivot_table(
-        index="date", columns="candidate", values="news_7d", aggfunc="sum", fill_value=0
-    ).sort_index()
+    latest = city_frame["date"].max()
+    cutoff = latest - pd.Timedelta(days=history_days - 1)
+    for candidate in candidates:
+        actual = city_frame[city_frame["candidate"] == candidate].sort_values("date")
+        path = FORECAST_DIR / f"{city}_{candidate}_forecast.csv"
+        forecast = load_forecast(city, candidate, file_mtime(path))
+        if actual.empty or forecast.empty:
+            continue
+        for _, point in actual[actual["date"] >= cutoff].iterrows():
+            rows.append({
+                "date": point["date"], "candidate": candidate,
+                "rolling_mentions": float(point["news_7d"]), "phase": "歷史實績",
+            })
+        daily = pd.concat([
+            actual[["date", "news_count"]].rename(columns={"news_count": "count"}),
+            forecast[["date", "forecast_news_count"]].rename(columns={"forecast_news_count": "count"}),
+        ]).sort_values("date")
+        daily["rolling_mentions"] = daily["count"].rolling(7, min_periods=1).sum()
+        projected = daily[daily["date"] > latest]
+        # Repeat the latest actual point so the dashed model line connects to history.
+        rows.append({
+            "date": latest, "candidate": candidate,
+            "rolling_mentions": float(actual.iloc[-1]["news_7d"]), "phase": "模型延伸",
+        })
+        for _, point in projected.iterrows():
+            rows.append({
+                "date": point["date"], "candidate": candidate,
+                "rolling_mentions": float(point["rolling_mentions"]), "phase": "模型延伸",
+            })
+    return pd.DataFrame(rows)
 
 
 def topic_summary(articles: pd.DataFrame) -> pd.DataFrame:
@@ -574,51 +605,62 @@ else:
     f2.metric("模型預估升溫最多", biggest_rise["candidate"], f"較最近 7 日 {biggest_rise['forecast_change']:+.0f} 次")
     f3.metric("18 人預測提及合計", f"約 {total_forecast:.0f} 次", f"{forecast_start:%m/%d}–{forecast_end:%m/%d}")
 
-    st.markdown("#### 六都預測焦點")
-    forecast_cols = st.columns(3)
+    st.markdown("#### 六都預測焦點 × 7 日滾動提及趨勢")
+    st.caption("先看各城市的預測焦點，再沿著最近 28 日實績曲線，觀察未來 7 日模型延伸；實線是歷史、虛線是預測。")
     city_leaders = forecast_summary.groupby("city", sort=False).head(1)
-    for index, (_, row) in enumerate(city_leaders.iterrows()):
-        delta_class = "delta-up" if row["forecast_change"] >= 0 else "delta-down"
-        delta_word = "增加" if row["forecast_change"] >= 0 else "減少"
-        card = f"""
+    forecast_tabs = st.tabs(city_leaders["city"].tolist())
+    for city_tab, (_, row) in zip(forecast_tabs, city_leaders.iterrows()):
+        with city_tab:
+            delta_class = "delta-up" if row["forecast_change"] >= 0 else "delta-down"
+            delta_word = "增加" if row["forecast_change"] >= 0 else "減少"
+            card = f"""
 <div class="forecast-card"><div class="city">{escape(row['city'])} · 預測聲量最高</div>
 <div class="person">{escape(row['candidate'])}</div>
 <div class="value">未來 7 日約 <b>{row['forecast_7d']:.0f}</b> 次 · 城市預測占比 {row['forecast_share']:.1f}%<br>
 較最近 7 日 <span class="{delta_class}">{delta_word} {abs(row['forecast_change']):.0f} 次</span></div></div>"""
-        with forecast_cols[index % 3]:
             st.markdown(card, unsafe_allow_html=True)
-
-    forecast_city = st.selectbox("查看城市預測走勢", list(candidate_map.keys()), key="forecast_city")
-    available = forecast_summary[forecast_summary["city"] == forecast_city].sort_values("forecast_7d", ascending=False)
-    default_people = available["candidate"].head(min(3, len(available))).tolist()
-    forecast_people = st.multiselect(
-        "比較未來 7 日人物", available["candidate"].tolist(), default=default_people,
-        key=f"forecast_people_{forecast_city}"
-    )
-    forecast_chart = pd.DataFrame()
-    for candidate in forecast_people:
-        path = FORECAST_DIR / f"{forecast_city}_{candidate}_forecast.csv"
-        one = load_forecast(forecast_city, candidate, file_mtime(path))
-        if not one.empty:
-            one = one[["date", "forecast_news_count"]].rename(columns={"forecast_news_count": candidate}).set_index("date")
-            forecast_chart = one if forecast_chart.empty else forecast_chart.join(one, how="outer")
-    if forecast_chart.empty:
-        st.info("請至少選擇一位有預測資料的人物。")
-    else:
-        st.line_chart(forecast_chart)
-        forecast_table = available[available["candidate"].isin(forecast_people)].copy()
-        forecast_table["模型方向"] = forecast_table["forecast_change"].map(lambda x: "升溫" if x > 0 else ("降溫" if x < 0 else "持平"))
-        st.dataframe(
-            forecast_table[["candidate", "news_7d", "forecast_7d", "forecast_change", "forecast_share", "模型方向"]].rename(columns={
-                "candidate":"追蹤人物", "news_7d":"最近 7 日", "forecast_7d":"未來 7 日預測", "forecast_change":"預測增減", "forecast_share":"城市預測占比 %"
-            }),
-            hide_index=True, width="stretch",
-            column_config={
-                "未來 7 日預測":st.column_config.NumberColumn(format="%.1f"),
-                "預測增減":st.column_config.NumberColumn(format="%+.1f"),
-                "城市預測占比 %":st.column_config.NumberColumn(format="%.1f"),
-            },
-        )
+            available = forecast_summary[forecast_summary["city"] == row["city"]].sort_values("forecast_7d", ascending=False)
+            default_people = available["candidate"].head(min(3, len(available))).tolist()
+            forecast_people = st.multiselect(
+                "比較人物", available["candidate"].tolist(), default=default_people,
+                key=f"forecast_people_{row['city']}"
+            )
+            combined = actual_and_forecast_rolling(df, row["city"], forecast_people)
+            if combined.empty:
+                st.info("請至少選擇一位有歷史與預測資料的人物。")
+            else:
+                trend = alt.Chart(combined).mark_line(point=False, strokeWidth=3).encode(
+                    x=alt.X("date:T", title=None, axis=alt.Axis(format="%m/%d", labelAngle=0)),
+                    y=alt.Y("rolling_mentions:Q", title="7 日滾動提及"),
+                    color=alt.Color("candidate:N", title="追蹤人物"),
+                    strokeDash=alt.StrokeDash(
+                        "phase:N", title="區間",
+                        scale=alt.Scale(domain=["歷史實績", "模型延伸"], range=[[1, 0], [7, 5]]),
+                    ),
+                    tooltip=[
+                        alt.Tooltip("date:T", title="日期", format="%Y-%m-%d"),
+                        alt.Tooltip("candidate:N", title="人物"),
+                        alt.Tooltip("phase:N", title="區間"),
+                        alt.Tooltip("rolling_mentions:Q", title="7 日滾動提及", format=".1f"),
+                    ],
+                ).properties(height=350)
+                boundary = alt.Chart(pd.DataFrame({"date": [latest_date]})).mark_rule(
+                    color="#7c3aed", strokeDash=[3, 3], strokeWidth=2
+                ).encode(x="date:T")
+                st.altair_chart((trend + boundary).interactive(), width="stretch")
+                forecast_table = available[available["candidate"].isin(forecast_people)].copy()
+                forecast_table["模型方向"] = forecast_table["forecast_change"].map(lambda x: "升溫" if x > 0 else ("降溫" if x < 0 else "持平"))
+                st.dataframe(
+                    forecast_table[["candidate", "news_7d", "forecast_7d", "forecast_change", "forecast_share", "模型方向"]].rename(columns={
+                        "candidate":"追蹤人物", "news_7d":"最近 7 日", "forecast_7d":"未來 7 日預測", "forecast_change":"預測增減", "forecast_share":"城市預測占比 %"
+                    }),
+                    hide_index=True, width="stretch",
+                    column_config={
+                        "未來 7 日預測":st.column_config.NumberColumn(format="%.1f"),
+                        "預測增減":st.column_config.NumberColumn(format="%+.1f"),
+                        "城市預測占比 %":st.column_config.NumberColumn(format="%.1f"),
+                    },
+                )
     st.markdown("<div class='forecast-note'>模型用途：提早發現媒體注意力可能升溫或降溫的人物，供後續追查議題與事件。單變量 LSTM 無法預知辯論、提名、司法與突發事件，因此不提供勝率，也不把預測聲量當成支持度。</div>", unsafe_allow_html=True)
 
 st.markdown(
@@ -691,12 +733,6 @@ else:
     k3.metric("本週動能", f"{int(lead['news_momentum']):+d}", trend_text(lead["news_momentum"]))
     city_articles = articles[articles["city"] == city] if not articles.empty else pd.DataFrame()
     k4.metric("可追溯新聞", f"{len(city_articles):,}", "標題與原文")
-
-    period = st.radio("趨勢範圍", [28, 60, 120], horizontal=True, format_func=lambda x: f"近 {x} 日")
-    chart = rolling_chart(df, city, selected, period)
-    st.subheader("7 日滾動提及趨勢")
-    st.line_chart(chart)
-    st.caption("使用 7 日滾動值降低單日噪音；上升可能由選戰、爭議或突發事件造成，不表示支持增加。")
 
     compare = selected_rows.copy()
     compare["趨勢"] = compare["news_momentum"].map(trend_text)

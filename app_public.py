@@ -70,6 +70,7 @@ st.markdown(
 }
 .st-key-theme_menu [data-testid="stPopoverButton"] {
   width:44px; height:40px; min-height:40px; padding:0; border-radius:12px;
+  display:grid; place-items:center; line-height:1;
 }
 [data-testid="stPopoverBody"] {
   position:fixed !important; left:auto !important; right:12px !important; top:60px !important;
@@ -89,7 +90,7 @@ h1,h2,h3 { letter-spacing:-.035em; color:var(--ink); }
 .chip { display:inline-block; border:1px solid rgba(255,255,255,.25); border-radius:999px; padding:7px 12px;
   font-size:12px; color:white !important; text-decoration:none !important; transition:.18s ease; }
 .chip:hover { background:rgba(255,255,255,.18); border-color:rgba(255,255,255,.62); transform:translateY(-1px); }
-.section-anchor { scroll-margin-top:18px; }
+.section-anchor { scroll-margin-top:76px; }
 [data-testid="stAppViewContainer"] { scroll-behavior:smooth; }
 .back-to-top { position:fixed; right:18px; bottom:22px; z-index:9999; display:inline-flex; align-items:center;
   gap:5px; padding:10px 14px; border-radius:999px; background:#4c1d95; color:white !important;
@@ -173,13 +174,15 @@ h1,h2,h3 { letter-spacing:-.035em; color:var(--ink); }
   .back-to-top { right:14px; bottom:76px; padding:9px 12px; font-size:12px; }
   .section-nav { margin:18px 0 24px; gap:6px; }
   .section-nav a { padding:9px 5px; font-size:11px; }
-  .mobile-nav { position:fixed; left:0; right:0; bottom:0; z-index:9998; display:flex; justify-content:space-around;
+  .mobile-nav { position:fixed; left:0; right:0; bottom:0; z-index:9998; display:flex; align-items:stretch; justify-content:space-around;
     padding:7px max(6px,env(safe-area-inset-right)) calc(7px + env(safe-area-inset-bottom)) max(6px,env(safe-area-inset-left));
     background:rgba(255,255,255,.96); border-top:1px solid #ddd6fe; box-shadow:0 -6px 22px rgba(35,18,61,.12);
     backdrop-filter:blur(14px); }
-  .mobile-nav a { min-width:54px; color:#4c1d95 !important; text-decoration:none !important; text-align:center;
-    font-size:10px; font-weight:800; line-height:1.25; }
-  .mobile-nav span { display:block; font-size:18px; margin-bottom:2px; }
+  .mobile-nav a { flex:1 1 0; min-width:0; min-height:49px; color:#4c1d95 !important; text-decoration:none !important;
+    display:flex; flex-direction:column; align-items:center; justify-content:center; gap:2px;
+    text-align:center; font-size:10px; font-weight:800; line-height:1.1; }
+  .mobile-nav .nav-icon { width:24px; height:24px; display:grid; place-items:center; margin:0;
+    font-family:Arial,"Noto Sans Symbols 2",sans-serif; font-size:18px; font-weight:400; line-height:1; }
   .forecast-shell { padding:17px; }
   .forecast-head { display:block; }
   .forecast-head h2 { font-size:25px; }
@@ -497,16 +500,17 @@ raw_file = latest_raw_file()
 articles = load_articles(str(raw_file) if raw_file else "", file_mtime(raw_file) if raw_file else 0, active_pairs)
 policy_data = load_policies(file_mtime(POLICIES_JSON))
 policies = policy_data.get("people", [])
+policies = [p for p in policies if (p.get("city"), p.get("name")) in set(active_pairs)]
 
 with st.sidebar:
     st.header("資料狀態")
     st.write(f"追蹤城市：{len(candidate_map)}")
-    st.write(f"追蹤人物：{len(active_pairs)}")
+    st.write(f"主要候選人：{len(active_pairs)}")
     st.write(f"新聞標題：{len(articles):,}")
     st.write(f"政策人物：{len(policies)}")
     st.caption("公開唯讀版，不提供重新抓取或覆蓋資料的操作。")
     st.divider()
-    st.caption("指標口徑：候選人在本系統收錄新聞中的提及次數；不代表支持、好感或投票意向。")
+    st.caption("指標口徑：候選人在本系統收錄新聞中的提及次數；不代表支持、好感或投票意向。本站僅涵蓋中選會審定名單中的 12 位主要候選人。")
 
 if df.empty:
     st.error("目前找不到可用的聲量特徵資料，請先執行 Pipeline。")
@@ -534,11 +538,11 @@ st.markdown(
 <div id="top" class="section-anchor"></div>
 <a class="back-to-top" href="#top" aria-label="回到頁面頂端">↑ 回頂端</a>
 <nav class="mobile-nav" aria-label="手機版主要導覽">
-  <a href="#top"><span>⌂</span>首頁</a>
-  <a href="#forecast"><span>⌁</span>預測</a>
-  <a href="#overview"><span>▦</span>六都</a>
-  <a href="#city"><span>◎</span>城市</a>
-  <a href="#policies"><span>☷</span>政見</a>
+  <a href="#top"><span class="nav-icon" aria-hidden="true">⌂</span><span>首頁</span></a>
+  <a href="#forecast"><span class="nav-icon" aria-hidden="true">⌁</span><span>預測</span></a>
+  <a href="#overview"><span class="nav-icon" aria-hidden="true">▦</span><span>六都</span></a>
+  <a href="#city"><span class="nav-icon" aria-hidden="true">◎</span><span>城市</span></a>
+  <a href="#policies"><span class="nav-icon" aria-hidden="true">☷</span><span>政見</span></a>
 </nav>
 """,
     unsafe_allow_html=True,
@@ -552,7 +556,7 @@ st.markdown(
   <p>選戰最後 30 天：用歷史聲量推估未來 7 日媒體注意力，再對照城市對決、議題變化與帶動聲量的關鍵事件。</p>
   <div class="chips">
     {nav_chip("forecast", "未來 7 日預測")}{nav_chip("overview", "六都對決")}{nav_chip("city", "7 日媒體注意力")}
-    {nav_chip("policies", "政見與公開主張")}{nav_chip("news", "熱門議題")}{nav_chip("news", "關鍵新聞原文")}{nav_chip("method", "資料口徑與方法")}
+    {nav_chip("policies", "政見與公開主張")}{nav_chip("news", "新聞與議題")}{nav_chip("method", "資料口徑與方法")}
   </div>
 </div>
 """,
@@ -563,6 +567,11 @@ fresh_class = "ok" if stale_days <= 1 else "warn"
 fresh_message = "資料為最新或僅延遲 1 天" if stale_days <= 1 else f"資料已延遲 {stale_days} 天，閱讀時請留意時效"
 st.markdown(
     f"<div class='fresh {fresh_class}'><b>資料截至 {latest_date:%Y-%m-%d}</b> · {fresh_message}。本頁衡量的是媒體報導提及，不是民調、支持度或勝選機率。</div>",
+    unsafe_allow_html=True,
+)
+st.markdown(
+    "<div class='callout'><b>候選人範圍：</b>依中選會 2026-10-16 資格審定資料，六都市長共有 23 位正式候選人；本站目前聚焦其中 12 位主要候選人，未涵蓋另外 11 位小黨或無黨籍候選人。"
+    " <a href='https://web.cec.gov.tw/central/article/65213' target='_blank' rel='noopener'>查看中選會審定公告 ↗</a></div>",
     unsafe_allow_html=True,
 )
 
@@ -603,7 +612,7 @@ else:
     f1, f2, f3 = st.columns(3)
     f1.metric("7 日預測提及最高", national_leader["candidate"], f"{national_leader['city']} · 約 {national_leader['forecast_7d']:.0f} 次")
     f2.metric("模型預估升溫最多", biggest_rise["candidate"], f"較最近 7 日 {biggest_rise['forecast_change']:+.0f} 次")
-    f3.metric("18 人預測提及合計", f"約 {total_forecast:.0f} 次", f"{forecast_start:%m/%d}–{forecast_end:%m/%d}")
+    f3.metric(f"{len(active_pairs)} 人預測提及合計", f"約 {total_forecast:.0f} 次", f"{forecast_start:%m/%d}–{forecast_end:%m/%d}")
 
     st.markdown("#### 六都預測焦點 × 7 日滾動提及趨勢")
     st.caption("先看各城市的預測焦點，再沿著最近 28 日實績曲線，觀察未來 7 日模型延伸；實線是歷史、虛線是預測。")
@@ -670,7 +679,7 @@ st.markdown(
 
 st.markdown("<div id='overview' class='section-anchor'></div>", unsafe_allow_html=True)
 st.subheader("六都媒體注意力對決")
-st.caption("占比＝該候選人近 7 日提及 ÷ 同城市所有追蹤人物近 7 日提及；只描述媒體注意力。")
+st.caption("占比＝該候選人近 7 日提及 ÷ 同城市本站涵蓋候選人近 7 日提及；只描述媒體注意力。")
 cols = st.columns(3)
 for index, item in enumerate(sorted(matchups, key=lambda x: x["city"])):
     first, second = item["first"], item["second"]
@@ -742,18 +751,11 @@ else:
         "news_momentum":"較前 7 日", "active_days":"有報導天數"
     }), hide_index=True, width="stretch", column_config={"城市占比 %":st.column_config.NumberColumn(format="%.1f"), "占比變化 pp":st.column_config.NumberColumn(format="%+.1f")})
 
-    news_left, news_right = st.columns([.85, 1.35])
-    with news_left:
-        st.subheader(f"{city}熱門議題")
-        recent_city = city_articles[city_articles["date"] >= latest_date - pd.Timedelta(days=29)] if not city_articles.empty else city_articles
-        summary = topic_summary(recent_city)
-        if summary.empty:
-            st.info("沒有議題資料。")
-        else:
-            st.bar_chart(summary.set_index("議題")["新聞事件數"], horizontal=True)
-    with news_right:
-        st.subheader(f"{city}關鍵新聞")
-        render_headlines(city_articles[city_articles["candidate"].isin(selected)] if not city_articles.empty else city_articles, 6)
+    st.markdown(
+        f"<div class='callout'><b>{escape(city)}新聞脈絡：</b>目前有 {len(city_articles):,} 筆可追溯標題。為避免重複，議題分布與新聞原文統一放在下方「新聞與議題」區。 "
+        "<a href='#news'>前往查看與篩選 ↓</a></div>",
+        unsafe_allow_html=True,
+    )
 
 st.markdown(
     "<div class='section-nav'><a href='#overview'>← 六都對決</a><a href='#top'>↑ 回頂端</a><a href='#policies'>政見主張 →</a></div>",
@@ -798,12 +800,13 @@ else:
     st.caption(f"政策資料更新：{policy_data.get('updated_at', '未標示')}。{policy_data.get('disclaimer', '')}")
 
 st.markdown(
-    "<div class='section-nav'><a href='#city'>← 城市分析</a><a href='#top'>↑ 回頂端</a><a href='#news'>新聞議題 →</a></div>",
+    "<div class='section-nav'><a href='#city'>← 城市分析</a><a href='#top'>↑ 回頂端</a><a href='#news'>新聞與議題 →</a></div>",
     unsafe_allow_html=True,
 )
 
 st.markdown("<div id='news' class='section-anchor'></div>", unsafe_allow_html=True)
-st.subheader("最近的選戰議題與原始新聞")
+st.subheader("新聞與議題")
+st.caption("城市與議題篩選會同時更新議題分布、來源分布及新聞原文，避免在不同段落重複呈現同一批資料。")
 filter_city = st.selectbox("城市篩選", ["全部六都"] + list(candidate_map.keys()), key="news_city")
 view = articles.copy()
 if filter_city != "全部六都" and not view.empty:
@@ -815,7 +818,7 @@ if selected_topic != "全部議題" and not view.empty:
 
 left, right = st.columns([1.25, .75])
 with left:
-    st.subheader("關鍵新聞原文")
+    st.subheader("新聞原文")
     render_headlines(view, 12)
 with right:
     st.subheader("議題分布")
@@ -841,13 +844,13 @@ st.markdown(
 - 同一則新聞若同時涉及多人，可能分別計入；新聞清單會以標題去重後呈現。
 - Google News 有搜尋結果上限與相關性擴張，累計數不適合當成長期人氣排行。
 - 議題分類來自標題關鍵字，可一篇多標籤；沒有進行情緒或立場判定。
-- 候選人名單是本站追蹤設定，不等於中選會正式登記或資格審定名單。
+- 六都市長官方資格審定名單共 23 人；本站僅涵蓋其中 12 位主要候選人，所有顯示人物都在中選會 2026-10-16 審定名單內，但不代表完整候選人名單。
 - 政策頁依公開資料區分正式政見、現任施政重點、近期公開主張與尚待公布；摘要不等於候選人完整政見書。
 """
 )
 q1, q2, q3, q4 = st.columns(4)
 q1.metric("資料涵蓋", f"{df['date'].min():%Y-%m-%d}", f"至 {latest_date:%Y-%m-%d}")
-q2.metric("追蹤人物", len(active_pairs))
+q2.metric("主要候選人", len(active_pairs))
 q3.metric("特徵資料", f"{len(df):,} 列")
 q4.metric("原始標記新聞", f"{len(articles):,} 筆")
 
@@ -871,6 +874,6 @@ with st.expander("資料品質檢查"):
     st.caption(f"原始檔：{raw_file.name if raw_file else '無'}")
 
 st.markdown(
-    "<div class='section-nav'><a href='#news'>← 新聞議題</a><a href='#top'>↑ 回頂端</a><a href='#overview'>六都對決 →</a></div>",
+    "<div class='section-nav'><a href='#news'>← 新聞與議題</a><a href='#top'>↑ 回頂端</a><a href='#overview'>六都對決 →</a></div>",
     unsafe_allow_html=True,
 )

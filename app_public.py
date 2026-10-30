@@ -42,14 +42,17 @@ st.set_page_config(
     initial_sidebar_state="collapsed",
 )
 
-theme_space, theme_control = st.columns([7, 3])
+theme_space, theme_control = st.columns([9.3, 0.7])
 with theme_control:
-    color_theme = st.selectbox(
-        "🎨 網站配色",
-        ["紫羅蘭", "海洋藍", "深夜"],
-        key="color_theme",
-        help="選擇後會立即套用到背景、導覽、卡片與文字",
-    )
+    with st.popover("⋮", help="網站顯示設定", key="display_settings"):
+        st.markdown("#### 🎨 網站配色")
+        color_theme = st.radio(
+            "網站配色",
+            ["紫羅蘭", "海洋藍", "深夜"],
+            key="color_theme",
+            label_visibility="collapsed",
+            help="選擇後會立即套用到背景、導覽、卡片與文字",
+        )
 
 st.markdown(
     """

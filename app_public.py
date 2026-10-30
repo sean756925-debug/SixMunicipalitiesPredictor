@@ -42,12 +42,13 @@ st.set_page_config(
     initial_sidebar_state="collapsed",
 )
 
-theme_space, theme_control = st.columns([7.5, 2.5])
+theme_space, theme_control = st.columns([7, 3])
 with theme_control:
-    dark_mode = st.toggle(
-        "🌙 深色模式",
-        key="dark_mode",
-        help="切換網站的明亮／深色顯示模式",
+    color_theme = st.selectbox(
+        "🎨 網站配色",
+        ["紫羅蘭", "海洋藍", "深夜"],
+        key="color_theme",
+        help="選擇後會立即套用到背景、導覽、卡片與文字",
     )
 
 st.markdown(
@@ -121,6 +122,18 @@ h1,h2,h3 { letter-spacing:-.035em; color:var(--ink); }
 .policy-card p { color:var(--muted); font-size:14px; line-height:1.6; min-height:68px; }
 .policy-card a { color:var(--violet2) !important; font-size:13px; font-weight:750; text-decoration:none !important; }
 .policy-note { color:var(--muted); background:#f5f4f7; border-radius:13px; padding:11px 13px; font-size:12px; line-height:1.55; margin-top:12px; }
+.policy-city-title { margin:30px 0 12px; padding:12px 16px; border-radius:16px; color:white; background:linear-gradient(100deg,var(--violet),var(--violet2)); font-size:22px; font-weight:850; }
+.policy-jumps { display:flex; flex-wrap:wrap; gap:8px; margin:8px 0 18px; }
+.policy-jumps a { border:1px solid var(--line); border-radius:999px; padding:7px 12px; background:white; color:var(--violet) !important; font-size:13px; font-weight:800; text-decoration:none !important; }
+.policy-jumps a:hover { border-color:var(--violet2); background:#f5f3ff; }
+.policy-person { background:white; border:1px solid var(--line); border-radius:20px; padding:18px; margin-bottom:14px; min-height:430px; box-shadow:0 7px 22px rgba(35,18,61,.05); }
+.policy-person h3 { margin:2px 0 7px; font-size:23px; }
+.policy-person-summary { color:var(--muted); font-size:13px; line-height:1.6; min-height:42px; margin-bottom:12px; }
+.policy-item { border-top:1px solid var(--line); padding:11px 0 8px; }
+.policy-item b { display:block; color:var(--ink); font-size:15px; margin-bottom:4px; }
+.policy-item p { color:var(--muted); font-size:13px; line-height:1.55; margin:0 0 5px; min-height:auto; }
+.policy-item a { color:var(--violet2) !important; font-size:12px; font-weight:750; text-decoration:none !important; }
+.policy-person .policy-note { margin-top:8px; }
 @media(max-width:700px){
   .hero{padding:24px 20px}.block-container{padding-left:1rem;padding-right:1rem;padding-bottom:7rem}.story{min-height:auto}
   .hero .chips { display:flex; flex-wrap:nowrap; overflow-x:auto; padding-bottom:5px; scrollbar-width:thin;
@@ -142,18 +155,38 @@ h1,h2,h3 { letter-spacing:-.035em; color:var(--ink); }
     unsafe_allow_html=True,
 )
 
-if dark_mode:
+if color_theme == "海洋藍":
     st.markdown(
         """
 <style>
-:root { --ink:#f4f0ff; --muted:#b9b2c8; --line:#40384d; --paper:#17131d; --violet2:#c4b5fd; }
+:root { --violet:#075985; --violet2:#0284c7; --blue:#0ea5e9; --line:#ccecf4; }
+.stApp { background:linear-gradient(180deg,#e6f9ff 0,#ffffff 480px); }
+.hero { background:linear-gradient(130deg,#083344 0%,#0369a1 55%,#0891b2 100%); }
+.back-to-top { background:#0369a1; box-shadow:0 8px 24px rgba(3,105,161,.28); }
+.section-nav a { color:#075985 !important; background:#f0f9ff; border-color:#bae6fd; }
+.section-nav a:hover { background:#e0f2fe; border-color:#7dd3fc; }
+.callout { background:#ecfeff; border-left-color:#0891b2; }
+.topic-pill,.policy-status { background:#cffafe; color:#155e75; }
+.share-fill { background:linear-gradient(90deg,#0284c7,#22d3ee); }
+.policy-city-title { background:linear-gradient(100deg,#075985,#06b6d4); }
+@media(max-width:700px){.mobile-nav{border-top-color:#bae6fd}.mobile-nav a{color:#075985 !important}}
+</style>
+""",
+        unsafe_allow_html=True,
+    )
+elif color_theme == "深夜":
+    st.markdown(
+        """
+<style>
+:root { --ink:#f4f0ff; --muted:#c4bdd2; --line:#40384d; --paper:#17131d; --violet:#7c3aed; --violet2:#c4b5fd; }
 .stApp { background:linear-gradient(180deg,#1c1329 0,#120f16 440px); color:var(--ink); }
 [data-testid="stHeader"] { background:rgba(18,15,22,.88); }
-.story,.city-card,.headline,.policy-intro,.policy-card,[data-testid="stMetric"] { background:#211b29; }
+.hero { background:linear-gradient(130deg,#111827 0%,#312e81 55%,#6d28d9 100%); }
+.story,.city-card,.headline,.policy-intro,.policy-card,.policy-person,.policy-jumps a,[data-testid="stMetric"] { background:#211b29; box-shadow:none; }
 .section-nav a { background:#251d31; border-color:#514263; color:#ddd6fe !important; }
 .section-nav a:hover { background:#352643; }
 .callout { background:#2b2038; }
-.topic-pill { background:#3a2850; color:#ddd6fe; }
+.topic-pill,.policy-status { background:#3a2850; color:#ddd6fe; }
 .headline a { color:#f4f0ff; }
 .source,.policy-note { background:#2d2735; }
 .share-track { background:#40384d; }
@@ -548,32 +581,34 @@ if not policies:
     st.info("目前沒有可顯示的政策資料。")
 else:
     policy_cities = [c for c in candidate_map if any(p["city"] == c for p in policies)]
-    pc1, pc2 = st.columns(2)
-    with pc1:
-        policy_city = st.selectbox("政見城市", policy_cities, key="policy_city")
-    city_policies = [p for p in policies if p["city"] == policy_city]
-    with pc2:
-        policy_name = st.selectbox("選擇人物", [p["name"] for p in city_policies], key="policy_person")
-    person = next(p for p in city_policies if p["name"] == policy_name)
-    st.markdown(
-        f"<div class='policy-intro'><span class='policy-status'>{escape(person['status'])}</span>"
-        f"<h3>{escape(person['name'])}｜{escape(person['city'])}</h3>"
-        f"<div class='small'>{escape(person['summary'])}</div></div>",
-        unsafe_allow_html=True,
-    )
-    policy_cols = st.columns(min(3, max(1, len(person.get("items", [])))))
-    for index, item in enumerate(person.get("items", [])):
-        source_url = escape(str(item.get("source_url", "")), quote=True)
-        source_name = escape(str(item.get("source_name", "查看來源")))
-        source_link = f"<a href='{source_url}' target='_blank' rel='noopener'>來源：{source_name} ↗</a>" if source_url else ""
-        card = (
-            f"<div class='policy-card'><h4>{escape(item['title'])}</h4>"
-            f"<p>{escape(item['content'])}</p>{source_link}</div>"
+    city_links = "".join(f"<a href='#policy-{escape(c)}'>{escape(c)}</a>" for c in policy_cities)
+    st.markdown(f"<div class='policy-jumps'>{city_links}</div>", unsafe_allow_html=True)
+    for policy_city in policy_cities:
+        city_policies = [p for p in policies if p["city"] == policy_city]
+        st.markdown(
+            f"<div id='policy-{escape(policy_city)}' class='policy-city-title section-anchor'>{escape(policy_city)}｜{len(city_policies)} 位追蹤人物</div>",
+            unsafe_allow_html=True,
         )
-        with policy_cols[index % len(policy_cols)]:
-            st.markdown(card, unsafe_allow_html=True)
-    if person.get("note"):
-        st.markdown(f"<div class='policy-note'><b>閱讀提醒：</b>{escape(person['note'])}</div>", unsafe_allow_html=True)
+        policy_cols = st.columns(2)
+        for index, person in enumerate(city_policies):
+            item_html = ""
+            for item in person.get("items", []):
+                source_url = escape(str(item.get("source_url", "")), quote=True)
+                source_name = escape(str(item.get("source_name", "查看來源")))
+                source_link = f"<a href='{source_url}' target='_blank' rel='noopener'>來源：{source_name} ↗</a>" if source_url else ""
+                item_html += (
+                    f"<div class='policy-item'><b>{escape(item['title'])}</b>"
+                    f"<p>{escape(item['content'])}</p>{source_link}</div>"
+                )
+            note_html = f"<div class='policy-note'><b>閱讀提醒：</b>{escape(person['note'])}</div>" if person.get("note") else ""
+            card = (
+                f"<div class='policy-person'><span class='policy-status'>{escape(person['status'])}</span>"
+                f"<h3>{escape(person['name'])}</h3>"
+                f"<div class='policy-person-summary'>{escape(person['summary'])}</div>"
+                f"{item_html}{note_html}</div>"
+            )
+            with policy_cols[index % 2]:
+                st.markdown(card, unsafe_allow_html=True)
     st.caption(f"政策資料更新：{policy_data.get('updated_at', '未標示')}。{policy_data.get('disclaimer', '')}")
 
 st.markdown(

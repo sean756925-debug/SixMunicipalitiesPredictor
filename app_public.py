@@ -42,8 +42,7 @@ st.set_page_config(
     initial_sidebar_state="collapsed",
 )
 
-theme_space, theme_control = st.columns([9.3, 0.7])
-with theme_control:
+with st.container(key="theme_menu"):
     with st.popover("⋮", help="網站顯示設定", key="display_settings"):
         st.markdown("#### 🎨 網站配色")
         color_theme = st.radio(
@@ -64,9 +63,16 @@ st.markdown(
 .stApp { background:linear-gradient(180deg,#f7f4ff 0,#fff 440px); color:var(--ink); }
 [data-testid="stHeader"] { background:rgba(255,255,255,.82); backdrop-filter:blur(14px); }
 [data-testid="stMainMenuButton"] { display:none !important; }
+.st-key-theme_menu {
+  position:fixed !important; top:8px; right:16px; z-index:1000000;
+  width:54px !important;
+}
+.st-key-theme_menu [data-testid="stPopoverButton"] {
+  width:44px; height:40px; min-height:40px; padding:0; border-radius:12px;
+}
 [data-testid="stPopoverBody"] {
-  position:fixed !important; left:50% !important; right:auto !important; top:68px !important;
-  transform:translateX(-50%) !important; width:min(340px,calc(100vw - 24px)) !important;
+  position:fixed !important; left:auto !important; right:12px !important; top:60px !important;
+  transform:none !important; width:min(300px,calc(100vw - 24px)) !important;
   max-width:calc(100vw - 24px) !important;
 }
 .block-container { max-width:1280px; padding-top:1.5rem; padding-bottom:4rem; }

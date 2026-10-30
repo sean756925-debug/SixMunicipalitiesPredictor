@@ -1,12 +1,14 @@
 import pandas as pd
 import numpy as np
+import zlib
 from sklearn.preprocessing import MinMaxScaler
 from pathlib import Path
 import matplotlib
 matplotlib.use("Agg")
 import matplotlib.pyplot as plt
 from tensorflow.keras.models import Sequential
-from tensorflow.keras.layers import LSTM, Dense
+from tensorflow.keras.layers import Input, LSTM, Dense
+from tensorflow.keras.utils import set_random_seed
 
 # 跨平台中文字型 fallback：Linux 用 Noto/文鼎，Windows 用微軟正黑
 plt.rcParams["font.sans-serif"] = [
@@ -24,6 +26,8 @@ PLOT_DIR.mkdir(parents=True, exist_ok=True)
 FORECAST_DIR.mkdir(parents=True, exist_ok=True)
 
 def train_and_predict(city, candidate, df):
+    # 每位人物使用固定種子，讓同一份輸入資料可重現。
+    set_random_seed(zlib.crc32(f"{city}|{candidate}".encode("utf-8")))
     df = df.sort_values("date")
     y = df["news_count"].values.reshape(-1, 1)
 
@@ -41,7 +45,8 @@ def train_and_predict(city, candidate, df):
     X = X.reshape(X.shape[0], X.shape[1], 1)
 
     model = Sequential([
-        LSTM(50, activation="tanh", return_sequences=False, input_shape=(window, 1)),
+        Input(shape=(window, 1)),
+        LSTM(50, activation="tanh", return_sequences=False),
         Dense(1)
     ])
     model.compile(optimizer="adam", loss="mse")
@@ -51,12 +56,14 @@ def train_and_predict(city, candidate, df):
     seq = y_scaled[-window:].reshape(1, window, 1)
     preds = []
     for _ in range(7):
-        p = model.predict(seq, verbose=1)[0][0]
+        p = model.predict(seq, verbose=0)[0][0]
         preds.append(p)
         new_seq = np.append(seq.flatten(), p)[1:]
         seq = new_seq.reshape(1, window, 1)
 
     preds = scaler.inverse_transform(np.array(preds).reshape(-1, 1)).flatten()
+    # 新聞提及量不可能為負；在落盤前就修正，而不是只靠前端裁切。
+    preds = np.clip(preds, 0, None)
     future_dates = pd.date_range(df["date"].iloc[-1] + pd.Timedelta(days=1), periods=7)
 
     # CSV

@@ -111,6 +111,22 @@ h1,h2,h3 { letter-spacing:-.035em; color:var(--ink); }
 .story .label { color:var(--violet2); font-size:12px; font-weight:700; letter-spacing:.08em; text-transform:uppercase; }
 .story .big { font-size:30px; font-weight:800; letter-spacing:-.04em; margin:7px 0; }
 .story .meta { color:var(--muted); font-size:14px; line-height:1.5; }
+.forecast-shell { background:linear-gradient(135deg,#fff 0%,#f5f3ff 100%); border:1px solid #ddd6fe;
+  border-radius:26px; padding:22px; margin:12px 0 18px; box-shadow:0 12px 34px rgba(76,29,149,.08); }
+.forecast-head { display:flex; align-items:flex-start; justify-content:space-between; gap:18px; margin-bottom:16px; }
+.forecast-head h2 { margin:2px 0 5px; font-size:30px; }
+.forecast-head p { color:var(--muted); margin:0; font-size:14px; line-height:1.55; }
+.countdown { flex:0 0 auto; min-width:145px; padding:13px 16px; border-radius:18px; text-align:center;
+  color:white; background:linear-gradient(135deg,var(--violet),var(--violet2)); }
+.countdown b { display:block; font-size:31px; line-height:1; margin-bottom:5px; }
+.countdown span { font-size:12px; font-weight:750; opacity:.86; }
+.forecast-card { background:white; border:1px solid var(--line); border-radius:18px; padding:15px 16px; margin-bottom:12px; min-height:142px; }
+.forecast-card .city { color:var(--violet2); font-size:12px; font-weight:800; letter-spacing:.08em; }
+.forecast-card .person { font-size:23px; font-weight:850; margin:5px 0; }
+.forecast-card .value { color:var(--muted); font-size:13px; line-height:1.5; }
+.forecast-card .delta-up { color:var(--rose); font-weight:800; }
+.forecast-card .delta-down { color:var(--green); font-weight:800; }
+.forecast-note { color:var(--muted); font-size:12px; line-height:1.55; margin-top:7px; }
 .city-card { background:white; border:1px solid var(--line); border-radius:22px; padding:18px; margin-bottom:12px; min-height:190px; }
 .city-title { font-size:21px; font-weight:800; margin-bottom:12px; }
 .match-row { display:flex; justify-content:space-between; gap:8px; font-size:14px; margin:7px 0; }
@@ -163,6 +179,10 @@ h1,h2,h3 { letter-spacing:-.035em; color:var(--ink); }
   .mobile-nav a { min-width:54px; color:#4c1d95 !important; text-decoration:none !important; text-align:center;
     font-size:10px; font-weight:800; line-height:1.25; }
   .mobile-nav span { display:block; font-size:18px; margin-bottom:2px; }
+  .forecast-shell { padding:17px; }
+  .forecast-head { display:block; }
+  .forecast-head h2 { font-size:25px; }
+  .countdown { margin-top:13px; width:100%; }
 }
 </style>
 """,
@@ -197,6 +217,8 @@ elif color_theme == "深夜":
 [data-testid="stHeader"] { background:rgba(18,15,22,.88); }
 .hero { background:linear-gradient(130deg,#111827 0%,#312e81 55%,#6d28d9 100%); }
 .story,.city-card,.headline,.policy-intro,.policy-card,.policy-person,.policy-jumps a,[data-testid="stMetric"] { background:#211b29; box-shadow:none; }
+.forecast-shell { background:linear-gradient(135deg,#211b29 0%,#292035 100%); border-color:#514263; box-shadow:none; }
+.forecast-card { background:#211b29; }
 .section-nav a { background:#251d31; border-color:#514263; color:#ddd6fe !important; }
 .section-nav a:hover { background:#352643; }
 .callout { background:#2b2038; }
@@ -322,6 +344,37 @@ def load_forecast(city: str, candidate: str, mtime: float) -> pd.DataFrame:
     return frame.dropna(subset=["date", "forecast_news_count"]).sort_values("date")
 
 
+def forecast_snapshot(current: pd.DataFrame, candidate_map: dict[str, list[str]]) -> pd.DataFrame:
+    """Aggregate each candidate's seven-day forecast for homepage storytelling."""
+    rows = []
+    for city, candidates in candidate_map.items():
+        for candidate in candidates:
+            path = FORECAST_DIR / f"{city}_{candidate}_forecast.csv"
+            forecast = load_forecast(city, candidate, file_mtime(path))
+            if forecast.empty:
+                continue
+            rows.append({
+                "city": city,
+                "candidate": candidate,
+                "forecast_7d": float(forecast["forecast_news_count"].sum()),
+                "forecast_daily_peak": float(forecast["forecast_news_count"].max()),
+                "forecast_start": forecast["date"].min(),
+                "forecast_end": forecast["date"].max(),
+            })
+    if not rows:
+        return pd.DataFrame()
+    result = pd.DataFrame(rows).merge(
+        current[["city", "candidate", "news_7d"]], on=["city", "candidate"], how="left"
+    )
+    result["news_7d"] = result["news_7d"].fillna(0)
+    result["forecast_change"] = result["forecast_7d"] - result["news_7d"]
+    result["city_forecast_total"] = result.groupby("city")["forecast_7d"].transform("sum")
+    result["forecast_share"] = result["forecast_7d"].div(
+        result["city_forecast_total"].replace(0, pd.NA)
+    ).fillna(0) * 100
+    return result.sort_values(["city", "forecast_7d"], ascending=[True, False])
+
+
 def candidate_snapshot(frame: pd.DataFrame) -> pd.DataFrame:
     latest = frame.sort_values("date").groupby(["city", "candidate"], as_index=False).tail(1).copy()
     totals = frame.groupby(["city", "candidate"], as_index=False).agg(
@@ -429,9 +482,12 @@ if df.empty:
     st.stop()
 
 snapshot = candidate_snapshot(df)
+forecast_summary = forecast_snapshot(snapshot, candidate_map)
 latest_date = df["date"].max()
 today = pd.Timestamp.now(tz="Asia/Taipei").tz_localize(None).normalize()
 stale_days = max(0, int((today - latest_date.normalize()).days))
+election_day = pd.Timestamp("2026-11-28")
+days_to_election = max(0, int((election_day - today).days) + 1)
 matchups = city_matchups(snapshot)
 attention = snapshot.sort_values(["news_7d", "news_momentum"], ascending=False).iloc[0]
 rising_pool = snapshot[snapshot["news_momentum"] > 0].sort_values("news_momentum", ascending=False)
@@ -448,10 +504,10 @@ st.markdown(
 <a class="back-to-top" href="#top" aria-label="回到頁面頂端">↑ 回頂端</a>
 <nav class="mobile-nav" aria-label="手機版主要導覽">
   <a href="#top"><span>⌂</span>首頁</a>
+  <a href="#forecast"><span>⌁</span>預測</a>
   <a href="#overview"><span>▦</span>六都</a>
-  <a href="#city"><span>⌁</span>城市</a>
+  <a href="#city"><span>◎</span>城市</a>
   <a href="#policies"><span>☷</span>政見</a>
-  <a href="#news"><span>▤</span>新聞</a>
 </nav>
 """,
     unsafe_allow_html=True,
@@ -462,9 +518,9 @@ st.markdown(
 <div class="hero">
   <div class="eyebrow">Election Media Radar · Taiwan 2026</div>
   <h1>六都選戰媒體雷達</h1>
-  <p>掌握選戰正在談什麼：追蹤候選人新聞提及、城市對決、議題變化與帶動聲量的關鍵事件。</p>
+  <p>選戰最後 30 天：用歷史聲量推估未來 7 日媒體注意力，再對照城市對決、議題變化與帶動聲量的關鍵事件。</p>
   <div class="chips">
-    {nav_chip("overview", "六都對決")}{nav_chip("city", "7 日媒體注意力")}
+    {nav_chip("forecast", "未來 7 日預測")}{nav_chip("overview", "六都對決")}{nav_chip("city", "7 日媒體注意力")}
     {nav_chip("policies", "政見與公開主張")}{nav_chip("news", "熱門議題")}{nav_chip("news", "關鍵新聞原文")}{nav_chip("method", "資料口徑與方法")}
   </div>
 </div>
@@ -489,6 +545,86 @@ with c3:
     st.markdown(f"<a class='story-link' href='#overview'><div class='story'><div class='label'>媒體注意力最接近</div><div class='big'>{closest['city']}</div><div class='meta'>{escape(closest['first']['candidate'])} vs {escape(second_name)} · 占比差 {closest['gap']:.1f} 個百分點</div></div></a>", unsafe_allow_html=True)
 
 st.markdown("<div class='callout'>真正值得看的不是「誰聲量大」，而是：哪個城市突然升溫、由哪些議題或新聞事件帶動，以及媒體注意力是否持續。</div>", unsafe_allow_html=True)
+
+st.markdown("<div id='forecast' class='section-anchor'></div>", unsafe_allow_html=True)
+if forecast_summary.empty:
+    st.info("目前沒有可用的未來 7 日預測資料。")
+else:
+    forecast_start = forecast_summary["forecast_start"].min()
+    forecast_end = forecast_summary["forecast_end"].max()
+    st.markdown(
+        f"""
+<div class="forecast-shell">
+  <div class="forecast-head">
+    <div><div class="eyebrow" style="color:var(--violet2)">CORE FORECAST · LSTM</div>
+    <h2>未來 7 日聲量預測</h2>
+    <p>根據各人物歷史每日新聞提及，逐日推估 {forecast_start:%m/%d}–{forecast_end:%m/%d} 的媒體注意力。數字是模型估計提及量，不是支持度或選票。</p></div>
+    <div class="countdown"><b>{days_to_election}</b><span>天後投票 · 11/28</span></div>
+  </div>
+</div>
+""",
+        unsafe_allow_html=True,
+    )
+
+    national_leader = forecast_summary.sort_values("forecast_7d", ascending=False).iloc[0]
+    biggest_rise = forecast_summary.sort_values("forecast_change", ascending=False).iloc[0]
+    total_forecast = forecast_summary["forecast_7d"].sum()
+    f1, f2, f3 = st.columns(3)
+    f1.metric("7 日預測提及最高", national_leader["candidate"], f"{national_leader['city']} · 約 {national_leader['forecast_7d']:.0f} 次")
+    f2.metric("模型預估升溫最多", biggest_rise["candidate"], f"較最近 7 日 {biggest_rise['forecast_change']:+.0f} 次")
+    f3.metric("18 人預測提及合計", f"約 {total_forecast:.0f} 次", f"{forecast_start:%m/%d}–{forecast_end:%m/%d}")
+
+    st.markdown("#### 六都預測焦點")
+    forecast_cols = st.columns(3)
+    city_leaders = forecast_summary.groupby("city", sort=False).head(1)
+    for index, (_, row) in enumerate(city_leaders.iterrows()):
+        delta_class = "delta-up" if row["forecast_change"] >= 0 else "delta-down"
+        delta_word = "增加" if row["forecast_change"] >= 0 else "減少"
+        card = f"""
+<div class="forecast-card"><div class="city">{escape(row['city'])} · 預測聲量最高</div>
+<div class="person">{escape(row['candidate'])}</div>
+<div class="value">未來 7 日約 <b>{row['forecast_7d']:.0f}</b> 次 · 城市預測占比 {row['forecast_share']:.1f}%<br>
+較最近 7 日 <span class="{delta_class}">{delta_word} {abs(row['forecast_change']):.0f} 次</span></div></div>"""
+        with forecast_cols[index % 3]:
+            st.markdown(card, unsafe_allow_html=True)
+
+    forecast_city = st.selectbox("查看城市預測走勢", list(candidate_map.keys()), key="forecast_city")
+    available = forecast_summary[forecast_summary["city"] == forecast_city].sort_values("forecast_7d", ascending=False)
+    default_people = available["candidate"].head(min(3, len(available))).tolist()
+    forecast_people = st.multiselect(
+        "比較未來 7 日人物", available["candidate"].tolist(), default=default_people,
+        key=f"forecast_people_{forecast_city}"
+    )
+    forecast_chart = pd.DataFrame()
+    for candidate in forecast_people:
+        path = FORECAST_DIR / f"{forecast_city}_{candidate}_forecast.csv"
+        one = load_forecast(forecast_city, candidate, file_mtime(path))
+        if not one.empty:
+            one = one[["date", "forecast_news_count"]].rename(columns={"forecast_news_count": candidate}).set_index("date")
+            forecast_chart = one if forecast_chart.empty else forecast_chart.join(one, how="outer")
+    if forecast_chart.empty:
+        st.info("請至少選擇一位有預測資料的人物。")
+    else:
+        st.line_chart(forecast_chart)
+        forecast_table = available[available["candidate"].isin(forecast_people)].copy()
+        forecast_table["模型方向"] = forecast_table["forecast_change"].map(lambda x: "升溫" if x > 0 else ("降溫" if x < 0 else "持平"))
+        st.dataframe(
+            forecast_table[["candidate", "news_7d", "forecast_7d", "forecast_change", "forecast_share", "模型方向"]].rename(columns={
+                "candidate":"追蹤人物", "news_7d":"最近 7 日", "forecast_7d":"未來 7 日預測", "forecast_change":"預測增減", "forecast_share":"城市預測占比 %"
+            }),
+            hide_index=True, width="stretch",
+            column_config={
+                "未來 7 日預測":st.column_config.NumberColumn(format="%.1f"),
+                "預測增減":st.column_config.NumberColumn(format="%+.1f"),
+                "城市預測占比 %":st.column_config.NumberColumn(format="%.1f"),
+            },
+        )
+    st.markdown("<div class='forecast-note'>模型用途：提早發現媒體注意力可能升溫或降溫的人物，供後續追查議題與事件。單變量 LSTM 無法預知辯論、提名、司法與突發事件，因此不提供勝率，也不把預測聲量當成支持度。</div>", unsafe_allow_html=True)
+
+st.markdown(
+    "<div class='section-nav'><a href='#top'>← 回首頁</a><a href='#top'>↑ 回頂端</a><a href='#overview'>六都對決 →</a></div>",
+    unsafe_allow_html=True,
+)
 
 st.markdown("<div id='overview' class='section-anchor'></div>", unsafe_allow_html=True)
 st.subheader("六都媒體注意力對決")
@@ -679,23 +815,13 @@ q2.metric("追蹤人物", len(active_pairs))
 q3.metric("特徵資料", f"{len(df):,} 列")
 q4.metric("原始標記新聞", f"{len(articles):,} 筆")
 
-with st.expander("實驗性：未來 7 日媒體報導量估計", expanded=False):
-    st.warning("這是單變量 LSTM 的聲量實驗，不是選情預測。模型無法預知提名、辯論、司法或突發事件，目前也沒有正式回測與可信區間。")
-    model_city = st.selectbox("城市", list(candidate_map.keys()), key="model_city")
-    model_candidates = [cand for cand in candidate_map[model_city] if cand in active_candidates]
-    model_selected = st.multiselect("查看人物", model_candidates, default=model_candidates[:2], key="model_people")
-    forecast_chart = pd.DataFrame()
-    for cand in model_selected:
-        fp = FORECAST_DIR / f"{model_city}_{cand}_forecast.csv"
-        fc = load_forecast(model_city, cand, file_mtime(fp))
-        if not fc.empty:
-            one = fc[["date", "forecast_news_count"]].rename(columns={"forecast_news_count": cand}).set_index("date")
-            forecast_chart = one if forecast_chart.empty else forecast_chart.join(one, how="outer")
-    if forecast_chart.empty:
-        st.info("所選人物目前沒有預測檔。")
-    else:
-        st.line_chart(forecast_chart)
-        st.caption("預測值已限制為非負；在加入回測、基準模型與誤差區間前，不作為首頁主指標。")
+with st.expander("預測模型說明與限制"):
+    st.markdown("""
+- 模型：各人物獨立的單變量 LSTM，以最近 7 個日曆日序列逐日遞迴預測未來 7 日新聞提及量。
+- 用途：找出值得優先追蹤的媒體注意力變化，不是選票、民調、支持度或勝選機率。
+- 限制：目前沒有納入候選人行程、民調、議題情緒或突發事件，也尚未展示正式回測誤差與可信區間。
+- 解讀：預測上升代表模型依歷史軌跡推估報導可能增加；實際結果仍可能因事件快速改變。
+""")
 
 with st.expander("資料品質檢查"):
     feature_people = set(df["candidate"].unique())

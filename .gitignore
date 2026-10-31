@@ -19,6 +19,7 @@ cloudflared-linux
 *.log
 perf.txt
 backups/
+data/analytics/
 *.bak
 *.before_anchor_nav_*
 

@@ -8,9 +8,12 @@ from datetime import datetime
 from html import escape
 import glob
 import json
+import os
 import re
+import sqlite3
 from pathlib import Path
 from urllib.parse import urlparse
+from zoneinfo import ZoneInfo
 
 import altair as alt
 import pandas as pd
@@ -24,6 +27,7 @@ FORECAST_DIR = BASE_DIR / "data" / "forecast"
 PLOT_DIR = BASE_DIR / "data" / "plots"
 KEYWORDS_YAML = BASE_DIR / "config" / "keywords.yaml"
 POLICIES_JSON = BASE_DIR / "data" / "candidate_policies.json"
+VIEW_DB = Path(os.environ.get("ELECTION_VIEW_DB", BASE_DIR / "data" / "analytics" / "views.sqlite3"))
 CITY_ORDER = ["台北市", "新北市", "桃園市", "台中市", "台南市", "高雄市"]
 
 TOPIC_RULES = {
@@ -43,6 +47,39 @@ st.set_page_config(
     layout="wide",
     initial_sidebar_state="collapsed",
 )
+
+
+def record_and_read_views(path: Path) -> tuple[int | None, int | None]:
+    """Count one view per Streamlit browser session without storing personal data."""
+    try:
+        path.parent.mkdir(parents=True, exist_ok=True)
+        now = datetime.now(ZoneInfo("Asia/Taipei"))
+        today = now.date().isoformat()
+        with sqlite3.connect(path, timeout=5) as connection:
+            connection.execute("PRAGMA journal_mode=WAL")
+            connection.execute(
+                "CREATE TABLE IF NOT EXISTS page_views ("
+                "id INTEGER PRIMARY KEY AUTOINCREMENT, viewed_at TEXT NOT NULL, viewed_date TEXT NOT NULL)"
+            )
+            if not st.session_state.get("page_view_recorded", False):
+                connection.execute(
+                    "INSERT INTO page_views (viewed_at, viewed_date) VALUES (?, ?)",
+                    (now.isoformat(timespec="seconds"), today),
+                )
+                connection.commit()
+                st.session_state["page_view_recorded"] = True
+            total = int(connection.execute("SELECT COUNT(*) FROM page_views").fetchone()[0])
+            daily = int(
+                connection.execute(
+                    "SELECT COUNT(*) FROM page_views WHERE viewed_date = ?", (today,)
+                ).fetchone()[0]
+            )
+        return total, daily
+    except (OSError, sqlite3.Error):
+        return None, None
+
+
+total_views, today_views = record_and_read_views(VIEW_DB)
 
 with st.container(key="theme_menu"):
     with st.popover("⋮", help="網站顯示設定", key="display_settings"):
@@ -106,6 +143,11 @@ h1,h2,h3 { letter-spacing:-.035em; color:var(--ink); }
 .fresh { border-radius:16px; padding:12px 16px; margin:12px 0 18px; border:1px solid; font-size:14px; }
 .fresh.ok { background:#ecfdf5; border-color:#a7f3d0; color:#065f46; }
 .fresh.warn { background:#fff7ed; border-color:#fed7aa; color:#9a3412; }
+.view-count { display:flex; align-items:center; gap:10px; width:max-content; max-width:100%; margin:-7px 0 18px;
+  padding:8px 13px; border:1px solid var(--line); border-radius:999px; background:rgba(255,255,255,.82);
+  color:var(--muted); font-size:12px; box-shadow:0 4px 14px rgba(35,18,61,.05); }
+.view-count b { color:var(--ink); font-size:14px; }
+.view-count span { padding-left:10px; border-left:1px solid var(--line); }
 .story { background:white; border:1px solid var(--line); border-radius:22px; padding:20px; min-height:164px; }
 .story-link { display:block; color:inherit !important; text-decoration:none !important; }
 .story-link .story { transition:.18s ease; }
@@ -222,6 +264,7 @@ elif color_theme == "深夜":
 [data-testid="stHeader"] { background:rgba(18,15,22,.88); }
 .hero { background:linear-gradient(130deg,#111827 0%,#312e81 55%,#6d28d9 100%); }
 .story,.city-card,.headline,.policy-intro,.policy-card,.policy-person,.policy-jumps a,[data-testid="stMetric"] { background:#211b29; box-shadow:none; }
+.view-count { background:#211b29; }
 .forecast-shell { background:linear-gradient(135deg,#211b29 0%,#292035 100%); border-color:#514263; box-shadow:none; }
 .forecast-card { background:#211b29; }
 .section-nav a { background:#251d31; border-color:#514263; color:#ddd6fe !important; }
@@ -575,6 +618,12 @@ st.markdown(
     f"<div class='fresh {fresh_class}'><b>資料截至 {latest_date:%Y-%m-%d}</b> · {fresh_message}。本頁衡量的是候選人相關新聞標記量，不是民調、支持度或勝選機率。</div>",
     unsafe_allow_html=True,
 )
+if total_views is not None and today_views is not None:
+    st.markdown(
+        f"<div class='view-count' aria-label='網站瀏覽次數'>👁 累計瀏覽 <b>{total_views:,}</b> 次"
+        f"<span>今日 {today_views:,} 次</span></div>",
+        unsafe_allow_html=True,
+    )
 st.markdown(
     "<div class='callout'><b>確定參選範圍：</b>依中選會 2026-10-16 資格審定資料，六都市長確定參選人共 23 位；本站目前追蹤其中 12 位，這 12 位均已確定參選，但本站不是完整候選人名單。"
     " <a href='https://web.cec.gov.tw/central/article/65213' target='_blank' rel='noopener'>查看中選會審定公告 ↗</a></div>",
@@ -853,6 +902,7 @@ st.markdown(
 - 議題分類來自標題關鍵字，可一篇多標籤；沒有進行情緒或立場判定。
 - 六都市長官方資格審定名單共 23 人；本站追蹤其中 12 位確定參選人，並非完整候選人名單。
 - 政策頁依公開資料區分正式政見、現任施政重點、近期公開主張與尚待公布；摘要不等於候選人完整政見書。
+- 瀏覽次數以每個 Streamlit 瀏覽器工作階段計一次；切換篩選、頁籤或配色不會重複累加。本站只保存瀏覽時間，不記錄 IP 或其他個人資料。
 """
 )
 q1, q2, q3, q4 = st.columns(4)

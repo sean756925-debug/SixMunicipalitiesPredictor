@@ -87,6 +87,7 @@ with st.container(key="theme_menu"):
         color_theme = st.radio(
             "網站配色",
             ["紫羅蘭", "海洋藍", "深夜"],
+            index=1,
             key="color_theme",
             label_visibility="collapsed",
         )

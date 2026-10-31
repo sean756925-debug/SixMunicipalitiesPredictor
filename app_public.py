@@ -911,13 +911,52 @@ q2.metric("確定參選人（本站追蹤）", f"{len(active_pairs)}／23")
 q3.metric("特徵資料", f"{len(df):,} 列")
 q4.metric("原始標記新聞", f"{len(articles):,} 筆")
 
-with st.expander("預測模型說明與限制"):
-    st.markdown("""
-- 模型：各候選人獨立的單變量 LSTM，以最近 7 個日曆日序列逐日遞迴預測未來 7 日新聞標記量。
-- 用途：找出值得優先追蹤的媒體注意力變化，不是選票、民調、支持度或勝選機率。
-- 限制：目前沒有納入候選人行程、民調、議題情緒或突發事件，也尚未展示正式回測誤差與可信區間。
-- 解讀：預測上升代表模型依歷史軌跡推估報導可能增加；實際結果仍可能因事件快速改變。
+st.markdown("<div id='model-note' class='section-anchor'></div>", unsafe_allow_html=True)
+st.subheader("關於預測模型")
+st.caption("這是一項媒體注意力趨勢實驗；模型輸出是新聞標記量推估，不是選舉結果預測。")
+
+model_col, purpose_col, note_col = st.columns(3)
+with model_col:
+    with st.container(border=True):
+        st.markdown("#### 使用的模型")
+        st.markdown("""
+**單變量 LSTM 時間序列模型**
+
+- 每位候選人分別訓練
+- 輸入最近 7 個日曆日的新聞標記量
+- LSTM 50 個單元、訓練 30 epochs
+- 逐日遞迴產生未來 7 日推估
+- 未使用民調、支持度或投票資料
 """)
+with purpose_col:
+    with st.container(border=True):
+        st.markdown("#### 功能與目的")
+        st.markdown("""
+模型用來提早發現媒體注意力可能升溫或降溫的候選人，協助讀者回頭查找：
+
+- 哪個城市突然升溫
+- 哪位候選人的新聞量改變
+- 變化可能由哪些議題或事件帶動
+
+它是**議題追蹤線索**，不是勝負判定工具。
+""")
+with note_col:
+    with st.container(border=True):
+        st.markdown("#### 解讀備註")
+        st.markdown("""
+- 聲量不等於支持、好感或選票
+- 模型無法預知辯論、司法與突發事件
+- 資料稀疏時，短期波動可能被放大
+- 目前沒有提供可信區間
+- 任何預測都應搭配實際新聞與後續數據判讀
+""")
+
+st.info(
+    "初步驗證：以最近 7 日作單次留出回測，LSTM 平均絕對誤差（MAE）為 5.948，"
+    "前 7 日平均基準為 5.852；LSTM 在 12 位候選人中有 6 位優於該基準。"
+    "這表示模型目前尚未證明整體優於簡單平均法，結果應視為實驗性趨勢推估，而非經驗證的高準確度預測。",
+    icon="🧪",
+)
 
 with st.expander("資料品質檢查"):
     feature_people = set(df["candidate"].unique())

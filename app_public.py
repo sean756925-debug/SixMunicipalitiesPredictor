@@ -24,6 +24,7 @@ FORECAST_DIR = BASE_DIR / "data" / "forecast"
 PLOT_DIR = BASE_DIR / "data" / "plots"
 KEYWORDS_YAML = BASE_DIR / "config" / "keywords.yaml"
 POLICIES_JSON = BASE_DIR / "data" / "candidate_policies.json"
+CITY_ORDER = ["台北市", "新北市", "桃園市", "台中市", "台南市", "高雄市"]
 
 TOPIC_RULES = {
     "選戰攻防": r"選舉|參選|提名|初選|選戰|民調|造勢|競選|藍綠|國民黨|民進黨|民眾黨|黨內|辯論|罷免",
@@ -247,7 +248,8 @@ def active_candidate_map() -> dict[str, list[str]]:
     if not KEYWORDS_YAML.exists():
         return {}
     with KEYWORDS_YAML.open("r", encoding="utf-8") as f:
-        return yaml.safe_load(f) or {}
+        raw = yaml.safe_load(f) or {}
+    return {city: raw[city] for city in CITY_ORDER if city in raw}
 
 
 @st.cache_data(show_spinner=False)
@@ -376,6 +378,7 @@ def forecast_snapshot(current: pd.DataFrame, candidate_map: dict[str, list[str]]
     result["forecast_share"] = result["forecast_7d"].div(
         result["city_forecast_total"].replace(0, pd.NA)
     ).fillna(0) * 100
+    result["city"] = pd.Categorical(result["city"], categories=CITY_ORDER, ordered=True)
     return result.sort_values(["city", "forecast_7d"], ascending=[True, False])
 
 
@@ -409,7 +412,10 @@ def trend_text(value: float) -> str:
 
 def city_matchups(snapshot: pd.DataFrame) -> list[dict]:
     result = []
-    for city, group in snapshot.groupby("city"):
+    for city in CITY_ORDER:
+        group = snapshot[snapshot["city"] == city]
+        if group.empty:
+            continue
         group = group.sort_values("mention_share", ascending=False)
         first = group.iloc[0]
         second = group.iloc[1] if len(group) > 1 else None
@@ -460,9 +466,9 @@ def actual_and_forecast_rolling(
 
 def topic_summary(articles: pd.DataFrame) -> pd.DataFrame:
     if articles.empty:
-        return pd.DataFrame(columns=["議題", "新聞事件數"])
+        return pd.DataFrame(columns=["議題", "去重標題數"])
     exploded = articles.drop_duplicates("dedupe_key").explode("topics")
-    return exploded.groupby("topics").size().sort_values(ascending=False).rename("新聞事件數").reset_index().rename(columns={"topics": "議題"})
+    return exploded.groupby("topics").size().sort_values(ascending=False).rename("去重標題數").reset_index().rename(columns={"topics": "議題"})
 
 
 def key_headlines(articles: pd.DataFrame, limit: int = 8) -> pd.DataFrame:
@@ -505,12 +511,12 @@ policies = [p for p in policies if (p.get("city"), p.get("name")) in set(active_
 with st.sidebar:
     st.header("資料狀態")
     st.write(f"追蹤城市：{len(candidate_map)}")
-    st.write(f"主要候選人：{len(active_pairs)}")
-    st.write(f"新聞標題：{len(articles):,}")
-    st.write(f"政策人物：{len(policies)}")
+    st.write(f"確定參選人（本站追蹤）：{len(active_pairs)}／23")
+    st.write(f"候選人－新聞標記：{len(articles):,}")
+    st.write(f"有政策資料的候選人：{len(policies)}")
     st.caption("公開唯讀版，不提供重新抓取或覆蓋資料的操作。")
     st.divider()
-    st.caption("指標口徑：候選人在本系統收錄新聞中的提及次數；不代表支持、好感或投票意向。本站僅涵蓋中選會審定名單中的 12 位主要候選人。")
+    st.caption("指標口徑：本系統歸類至各候選人的新聞結果數；不代表支持、好感或投票意向。本站追蹤的 12 位均為中選會審定的確定參選人，但不是完整 23 人名單。")
 
 if df.empty:
     st.error("目前找不到可用的聲量特徵資料，請先執行 Pipeline。")
@@ -522,7 +528,7 @@ latest_date = df["date"].max()
 today = pd.Timestamp.now(tz="Asia/Taipei").tz_localize(None).normalize()
 stale_days = max(0, int((today - latest_date.normalize()).days))
 election_day = pd.Timestamp("2026-11-28")
-days_to_election = max(0, int((election_day - today).days) + 1)
+days_to_election = max(0, int((election_day - today).days))
 matchups = city_matchups(snapshot)
 attention = snapshot.sort_values(["news_7d", "news_momentum"], ascending=False).iloc[0]
 rising_pool = snapshot[snapshot["news_momentum"] > 0].sort_values("news_momentum", ascending=False)
@@ -553,9 +559,9 @@ st.markdown(
 <div class="hero">
   <div class="eyebrow">Election Media Radar · Taiwan 2026</div>
   <h1>六都選戰媒體雷達</h1>
-  <p>選戰最後 30 天：用歷史聲量推估未來 7 日媒體注意力，再對照城市對決、議題變化與帶動聲量的關鍵事件。</p>
+  <p>選戰最後 30 天：用歷史新聞標記量推估未來 7 日媒體注意力，再比較六都追蹤候選人、議題變化與帶動聲量的關鍵事件。</p>
   <div class="chips">
-    {nav_chip("forecast", "未來 7 日預測")}{nav_chip("overview", "六都對決")}{nav_chip("city", "7 日媒體注意力")}
+    {nav_chip("forecast", "未來 7 日預測")}{nav_chip("overview", "六都候選人比較")}{nav_chip("city", "7 日媒體注意力")}
     {nav_chip("policies", "政見與公開主張")}{nav_chip("news", "新聞與議題")}{nav_chip("method", "資料口徑與方法")}
   </div>
 </div>
@@ -566,20 +572,20 @@ st.markdown(
 fresh_class = "ok" if stale_days <= 1 else "warn"
 fresh_message = "資料為最新或僅延遲 1 天" if stale_days <= 1 else f"資料已延遲 {stale_days} 天，閱讀時請留意時效"
 st.markdown(
-    f"<div class='fresh {fresh_class}'><b>資料截至 {latest_date:%Y-%m-%d}</b> · {fresh_message}。本頁衡量的是媒體報導提及，不是民調、支持度或勝選機率。</div>",
+    f"<div class='fresh {fresh_class}'><b>資料截至 {latest_date:%Y-%m-%d}</b> · {fresh_message}。本頁衡量的是候選人相關新聞標記量，不是民調、支持度或勝選機率。</div>",
     unsafe_allow_html=True,
 )
 st.markdown(
-    "<div class='callout'><b>候選人範圍：</b>依中選會 2026-10-16 資格審定資料，六都市長共有 23 位正式候選人；本站目前聚焦其中 12 位主要候選人，未涵蓋另外 11 位小黨或無黨籍候選人。"
+    "<div class='callout'><b>確定參選範圍：</b>依中選會 2026-10-16 資格審定資料，六都市長確定參選人共 23 位；本站目前追蹤其中 12 位，這 12 位均已確定參選，但本站不是完整候選人名單。"
     " <a href='https://web.cec.gov.tw/central/article/65213' target='_blank' rel='noopener'>查看中選會審定公告 ↗</a></div>",
     unsafe_allow_html=True,
 )
 
 c1, c2, c3 = st.columns(3)
 with c1:
-    st.markdown(f"<a class='story-link' href='#city'><div class='story'><div class='label'>近 7 日最受關注</div><div class='big'>{escape(attention['candidate'])}</div><div class='meta'>{attention['city']} · {int(attention['news_7d'])} 次提及 · 城市占比 {attention['mention_share']:.1f}%</div></div></a>", unsafe_allow_html=True)
+    st.markdown(f"<a class='story-link' href='#city'><div class='story'><div class='label'>近 7 日最受關注</div><div class='big'>{escape(attention['candidate'])}</div><div class='meta'>{attention['city']} · {int(attention['news_7d'])} 筆標記 · 本站同城占比 {attention['mention_share']:.1f}%</div></div></a>", unsafe_allow_html=True)
 with c2:
-    st.markdown(f"<a class='story-link' href='#city'><div class='story'><div class='label'>本週升溫最快</div><div class='big'>{escape(riser['candidate'])}</div><div class='meta'>{riser['city']} · 比前 7 日增加 {int(riser['news_momentum']):+d} 次 · {trend_text(riser['news_momentum'])}</div></div></a>", unsafe_allow_html=True)
+    st.markdown(f"<a class='story-link' href='#city'><div class='story'><div class='label'>最近 7 日增幅最大</div><div class='big'>{escape(riser['candidate'])}</div><div class='meta'>{riser['city']} · 較前 7 日 {int(riser['news_momentum']):+d} 次 · {trend_text(riser['news_momentum'])}</div></div></a>", unsafe_allow_html=True)
 with c3:
     second_name = closest["second"]["candidate"] if closest["second"] is not None else "—"
     st.markdown(f"<a class='story-link' href='#overview'><div class='story'><div class='label'>媒體注意力最接近</div><div class='big'>{closest['city']}</div><div class='meta'>{escape(closest['first']['candidate'])} vs {escape(second_name)} · 占比差 {closest['gap']:.1f} 個百分點</div></div></a>", unsafe_allow_html=True)
@@ -598,7 +604,7 @@ else:
   <div class="forecast-head">
     <div><div class="eyebrow" style="color:var(--violet2)">CORE FORECAST · LSTM</div>
     <h2>未來 7 日聲量預測</h2>
-    <p>根據各人物歷史每日新聞提及，逐日推估 {forecast_start:%m/%d}–{forecast_end:%m/%d} 的媒體注意力。數字是模型估計提及量，不是支持度或選票。</p></div>
+    <p>根據各候選人歷史每日新聞標記量，逐日推估 {forecast_start:%m/%d}–{forecast_end:%m/%d} 的媒體注意力。數字是模型估計值，不是支持度或選票。</p></div>
     <div class="countdown"><b>{days_to_election}</b><span>天後投票 · 11/28</span></div>
   </div>
 </div>
@@ -610,13 +616,13 @@ else:
     biggest_rise = forecast_summary.sort_values("forecast_change", ascending=False).iloc[0]
     total_forecast = forecast_summary["forecast_7d"].sum()
     f1, f2, f3 = st.columns(3)
-    f1.metric("7 日預測提及最高", national_leader["candidate"], f"{national_leader['city']} · 約 {national_leader['forecast_7d']:.0f} 次")
-    f2.metric("模型預估升溫最多", biggest_rise["candidate"], f"較最近 7 日 {biggest_rise['forecast_change']:+.0f} 次")
-    f3.metric(f"{len(active_pairs)} 人預測提及合計", f"約 {total_forecast:.0f} 次", f"{forecast_start:%m/%d}–{forecast_end:%m/%d}")
+    f1.metric("7 日模型估計值最高", national_leader["candidate"], f"{national_leader['city']} · 約 {national_leader['forecast_7d']:.0f} 次")
+    f2.metric("模型估計增幅最大", biggest_rise["candidate"], f"較最近 7 日 {biggest_rise['forecast_change']:+.0f} 次")
+    f3.metric(f"{len(forecast_summary)} 位具預測資料候選人估計值加總", f"約 {total_forecast:.0f} 次", f"{forecast_start:%m/%d}–{forecast_end:%m/%d}")
 
-    st.markdown("#### 六都預測焦點 × 7 日滾動提及趨勢")
-    st.caption("先看各城市的預測焦點，再沿著最近 28 日實績曲線，觀察未來 7 日模型延伸；實線是歷史、虛線是預測。")
-    city_leaders = forecast_summary.groupby("city", sort=False).head(1)
+    st.markdown("#### 六都預測焦點 × 7 日滾動新聞標記趨勢")
+    st.caption("先看各城市的預測焦點，再沿著最近 28 日實績曲線觀察模型延伸。虛線為加入每日模型估計後的 7 日滾動量；前 6 個未來點仍包含部分歷史實績。")
+    city_leaders = forecast_summary.groupby("city", sort=False, observed=True).head(1)
     forecast_tabs = st.tabs(city_leaders["city"].tolist())
     for city_tab, (_, row) in zip(forecast_tabs, city_leaders.iterrows()):
         with city_tab:
@@ -625,32 +631,32 @@ else:
             card = f"""
 <div class="forecast-card"><div class="city">{escape(row['city'])} · 預測聲量最高</div>
 <div class="person">{escape(row['candidate'])}</div>
-<div class="value">未來 7 日約 <b>{row['forecast_7d']:.0f}</b> 次 · 城市預測占比 {row['forecast_share']:.1f}%<br>
+<div class="value">未來 7 日約 <b>{row['forecast_7d']:.0f}</b> 次 · 本站同城預測占比 {row['forecast_share']:.1f}%<br>
 較最近 7 日 <span class="{delta_class}">{delta_word} {abs(row['forecast_change']):.0f} 次</span></div></div>"""
             st.markdown(card, unsafe_allow_html=True)
             available = forecast_summary[forecast_summary["city"] == row["city"]].sort_values("forecast_7d", ascending=False)
             default_people = available["candidate"].head(min(3, len(available))).tolist()
             forecast_people = st.multiselect(
-                "比較人物", available["candidate"].tolist(), default=default_people,
+                "比較候選人", available["candidate"].tolist(), default=default_people,
                 key=f"forecast_people_{row['city']}"
             )
             combined = actual_and_forecast_rolling(df, row["city"], forecast_people)
             if combined.empty:
-                st.info("請至少選擇一位有歷史與預測資料的人物。")
+                st.info("請至少選擇一位有歷史與預測資料的候選人。")
             else:
                 trend = alt.Chart(combined).mark_line(point=False, strokeWidth=3).encode(
                     x=alt.X("date:T", title=None, axis=alt.Axis(format="%m/%d", labelAngle=0)),
-                    y=alt.Y("rolling_mentions:Q", title="7 日滾動提及"),
-                    color=alt.Color("candidate:N", title="追蹤人物"),
+                    y=alt.Y("rolling_mentions:Q", title="7 日滾動新聞標記"),
+                    color=alt.Color("candidate:N", title="追蹤候選人"),
                     strokeDash=alt.StrokeDash(
                         "phase:N", title="區間",
                         scale=alt.Scale(domain=["歷史實績", "模型延伸"], range=[[1, 0], [7, 5]]),
                     ),
                     tooltip=[
                         alt.Tooltip("date:T", title="日期", format="%Y-%m-%d"),
-                        alt.Tooltip("candidate:N", title="人物"),
+                        alt.Tooltip("candidate:N", title="候選人"),
                         alt.Tooltip("phase:N", title="區間"),
-                        alt.Tooltip("rolling_mentions:Q", title="7 日滾動提及", format=".1f"),
+                        alt.Tooltip("rolling_mentions:Q", title="7 日滾動新聞標記", format=".1f"),
                     ],
                 ).properties(height=350)
                 boundary = alt.Chart(pd.DataFrame({"date": [latest_date]})).mark_rule(
@@ -661,29 +667,29 @@ else:
                 forecast_table["模型方向"] = forecast_table["forecast_change"].map(lambda x: "升溫" if x > 0 else ("降溫" if x < 0 else "持平"))
                 st.dataframe(
                     forecast_table[["candidate", "news_7d", "forecast_7d", "forecast_change", "forecast_share", "模型方向"]].rename(columns={
-                        "candidate":"追蹤人物", "news_7d":"最近 7 日", "forecast_7d":"未來 7 日預測", "forecast_change":"預測增減", "forecast_share":"城市預測占比 %"
+                        "candidate":"追蹤候選人", "news_7d":"最近 7 日", "forecast_7d":"未來 7 日預測", "forecast_change":"預測增減", "forecast_share":"本站同城預測占比 %"
                     }),
                     hide_index=True, width="stretch",
                     column_config={
                         "未來 7 日預測":st.column_config.NumberColumn(format="%.1f"),
                         "預測增減":st.column_config.NumberColumn(format="%+.1f"),
-                        "城市預測占比 %":st.column_config.NumberColumn(format="%.1f"),
+                        "本站同城預測占比 %":st.column_config.NumberColumn(format="%.1f"),
                     },
                 )
-    st.markdown("<div class='forecast-note'>模型用途：提早發現媒體注意力可能升溫或降溫的人物，供後續追查議題與事件。單變量 LSTM 無法預知辯論、提名、司法與突發事件，因此不提供勝率，也不把預測聲量當成支持度。</div>", unsafe_allow_html=True)
+    st.markdown("<div class='forecast-note'>模型用途：提早發現媒體注意力可能升溫或降溫的候選人，供後續追查議題與事件。單變量 LSTM 無法預知辯論、提名、司法與突發事件，因此不提供勝率，也不把預測聲量當成支持度。</div>", unsafe_allow_html=True)
 
 st.markdown(
-    "<div class='section-nav'><a href='#top'>← 回首頁</a><a href='#top'>↑ 回頂端</a><a href='#overview'>六都對決 →</a></div>",
+    "<div class='section-nav'><a href='#top'>← 回首頁</a><a href='#top'>↑ 回頂端</a><a href='#overview'>六都比較 →</a></div>",
     unsafe_allow_html=True,
 )
 
 st.markdown("<div id='overview' class='section-anchor'></div>", unsafe_allow_html=True)
-st.subheader("六都媒體注意力對決")
-st.caption("占比＝該候選人近 7 日提及 ÷ 同城市本站涵蓋候選人近 7 日提及；只描述媒體注意力。")
+st.subheader("六都追蹤候選人媒體注意力比較")
+st.caption("占比＝該候選人近 7 日新聞標記 ÷ 同城市本站追蹤候選人近 7 日新聞標記；只描述本站追蹤範圍內的媒體注意力。")
 cols = st.columns(3)
-for index, item in enumerate(sorted(matchups, key=lambda x: x["city"])):
+for index, item in enumerate(sorted(matchups, key=lambda x: CITY_ORDER.index(x["city"]))):
     first, second = item["first"], item["second"]
-    second_html = "尚無第二位追蹤人物"
+    second_html = "尚無第二位追蹤候選人"
     if second is not None:
         second_html = (
             f"<div class='match-row'><span>{escape(second['candidate'])}</span>"
@@ -691,7 +697,7 @@ for index, item in enumerate(sorted(matchups, key=lambda x: x["city"])):
             f"<div class='share-track'><div class='share-fill secondary' "
             f"style='width:{min(100,second['mention_share']):.1f}%'></div></div>"
         )
-    note = f"前兩位占比差 {item['gap']:.1f} 個百分點；{escape(first['candidate'])}本週{trend_text(first['news_momentum'])}。"
+    note = f"兩位追蹤候選人占比差 {item['gap']:.1f} 個百分點；{escape(first['candidate'])}最近 7 日較前 7 日{trend_text(first['news_momentum'])}。"
     html = f"""
 <div class='city-card'><div class='city-title'>{item['city']}</div>
 <div class='match-row'><span>{escape(first['candidate'])}</span><b>{first['mention_share']:.1f}% · {int(first['news_7d'])} 次</b></div>
@@ -702,22 +708,22 @@ for index, item in enumerate(sorted(matchups, key=lambda x: x["city"])):
 
 left, right = st.columns([1.2, 1])
 with left:
-    st.subheader("近 7 日提及排行")
+    st.subheader("12 位追蹤候選人近 7 日新聞標記排行")
     table = snapshot.sort_values("news_7d", ascending=False).copy()
     table["趨勢"] = table["news_momentum"].map(trend_text)
     st.dataframe(
         table[["city", "candidate", "news_7d", "mention_share", "news_momentum", "趨勢"]].rename(columns={
-            "city":"城市", "candidate":"追蹤人物", "news_7d":"7 日提及", "mention_share":"城市占比 %", "news_momentum":"較前期"
-        }), hide_index=True, width="stretch", column_config={"城市占比 %":st.column_config.NumberColumn(format="%.1f")}
+            "city":"城市", "candidate":"追蹤候選人", "news_7d":"7 日標記", "mention_share":"本站同城占比 %", "news_momentum":"較前 7 日"
+        }), hide_index=True, width="stretch", column_config={"本站同城占比 %":st.column_config.NumberColumn(format="%.1f")}
     )
 with right:
-    st.subheader("跨城市重點議題")
+    st.subheader("最近 14 日跨城市新聞議題")
     topics = topic_summary(articles[articles["date"] >= latest_date - pd.Timedelta(days=13)] if not articles.empty else articles)
     if topics.empty:
         st.info("沒有可用的新聞標題。")
     else:
-        st.bar_chart(topics.set_index("議題")["新聞事件數"], horizontal=True)
-        st.caption("依新聞標題關鍵字規則分類，一篇新聞可涉及多個議題。")
+        st.bar_chart(topics.set_index("議題")["去重標題數"], horizontal=True)
+        st.caption("僅涵蓋本站追蹤候選人；依標題關鍵字分類，一篇可涉及多個議題，同一事件的不同標題仍可能分別計入。")
 
 st.markdown(
     "<div class='section-nav'><a href='#top'>← 回首頁</a><a href='#top'>↑ 回頂端</a><a href='#city'>城市分析 →</a></div>",
@@ -730,26 +736,27 @@ default_index = cities.index("台北市") if "台北市" in cities else 0
 city = st.selectbox("選擇城市", cities, index=default_index)
 city_snapshot = snapshot[snapshot["city"] == city].sort_values("mention_share", ascending=False)
 candidates = city_snapshot["candidate"].tolist()
-selected = st.multiselect("比較人物", candidates, default=candidates)
+selected = st.multiselect("比較候選人", candidates, default=candidates)
 if not selected:
-    st.info("請至少選擇一位人物。")
+    st.info("請至少選擇一位候選人。")
 else:
     selected_rows = city_snapshot[city_snapshot["candidate"].isin(selected)]
     k1, k2, k3, k4 = st.columns(4)
     lead = selected_rows.iloc[0]
-    k1.metric("7 日提及最多", lead["candidate"], f"{int(lead['news_7d'])} 次")
-    k2.metric("媒體提及占比", f"{lead['mention_share']:.1f}%", f"{lead['share_change']:+.1f}pp")
-    k3.metric("本週動能", f"{int(lead['news_momentum']):+d}", trend_text(lead["news_momentum"]))
+    k1.metric("7 日新聞標記最多", lead["candidate"], f"{int(lead['news_7d'])} 次")
+    k2.metric("新聞標記占比", f"{lead['mention_share']:.1f}%", f"{lead['share_change']:+.1f}pp")
+    k3.metric("最近 7 日較前 7 日", f"{int(lead['news_momentum']):+d}", trend_text(lead["news_momentum"]))
     city_articles = articles[articles["city"] == city] if not articles.empty else pd.DataFrame()
-    k4.metric("可追溯新聞", f"{len(city_articles):,}", "標題與原文")
+    city_unique_headlines = city_articles.drop_duplicates("dedupe_key") if not city_articles.empty else city_articles
+    k4.metric("可追溯去重標題", f"{len(city_unique_headlines):,}", "標題與原文")
 
     compare = selected_rows.copy()
     compare["趨勢"] = compare["news_momentum"].map(trend_text)
-    st.subheader("人物比較")
+    st.subheader("追蹤候選人比較")
     st.dataframe(compare[["candidate", "news_7d", "mention_share", "share_change", "news_momentum", "active_days", "趨勢"]].rename(columns={
-        "candidate":"追蹤人物", "news_7d":"7 日提及", "mention_share":"城市占比 %", "share_change":"占比變化 pp",
-        "news_momentum":"較前 7 日", "active_days":"有報導天數"
-    }), hide_index=True, width="stretch", column_config={"城市占比 %":st.column_config.NumberColumn(format="%.1f"), "占比變化 pp":st.column_config.NumberColumn(format="%+.1f")})
+        "candidate":"追蹤候選人", "news_7d":"7 日標記", "mention_share":"本站同城占比 %", "share_change":"占比變化 pp",
+        "news_momentum":"較前 7 日", "active_days":"全期間有標記天數"
+    }), hide_index=True, width="stretch", column_config={"本站同城占比 %":st.column_config.NumberColumn(format="%.1f"), "占比變化 pp":st.column_config.NumberColumn(format="%+.1f")})
 
     st.markdown(
         f"<div class='callout'><b>{escape(city)}新聞脈絡：</b>目前有 {len(city_articles):,} 筆可追溯標題。為避免重複，議題分布與新聞原文統一放在下方「新聞與議題」區。 "
@@ -758,13 +765,13 @@ else:
     )
 
 st.markdown(
-    "<div class='section-nav'><a href='#overview'>← 六都對決</a><a href='#top'>↑ 回頂端</a><a href='#policies'>政見主張 →</a></div>",
+    "<div class='section-nav'><a href='#overview'>← 六都比較</a><a href='#top'>↑ 回頂端</a><a href='#policies'>政見主張 →</a></div>",
     unsafe_allow_html=True,
 )
 
 st.markdown("<div id='policies' class='section-anchor'></div>", unsafe_allow_html=True)
 st.subheader("政見與公開主張")
-st.caption("先看人物主張，再對照媒體注意力。本站區分正式政見、現任施政重點、近期公開主張與尚待公布，避免把所有發言都當成競選承諾。")
+st.caption("先看候選人主張，再對照媒體注意力。卡片狀態描述政策資料類型，不代表參選資格；本頁顯示者均為本站追蹤且已確定參選的候選人。")
 if not policies:
     st.info("目前沒有可顯示的政策資料。")
 else:
@@ -774,7 +781,7 @@ else:
     for policy_city in policy_cities:
         city_policies = [p for p in policies if p["city"] == policy_city]
         st.markdown(
-            f"<div id='policy-{escape(policy_city)}' class='policy-city-title section-anchor'>{escape(policy_city)}｜{len(city_policies)} 位追蹤人物</div>",
+            f"<div id='policy-{escape(policy_city)}' class='policy-city-title section-anchor'>{escape(policy_city)}｜{len(city_policies)} 位確定參選人</div>",
             unsafe_allow_html=True,
         )
         policy_cols = st.columns(2)
@@ -824,7 +831,7 @@ with right:
     st.subheader("議題分布")
     summary = topic_summary(view)
     if not summary.empty:
-        st.bar_chart(summary.set_index("議題")["新聞事件數"], horizontal=True)
+        st.bar_chart(summary.set_index("議題")["去重標題數"], horizontal=True)
     st.subheader("來源分布")
     if not view.empty:
         source_counts = view.drop_duplicates("dedupe_key")["publisher"].value_counts().head(10)
@@ -840,23 +847,23 @@ st.markdown("<div id='method' class='section-anchor'></div>", unsafe_allow_html=
 st.subheader("資料口徑與限制")
 st.markdown(
     """
-- 「提及」是候選人在本系統收錄新聞中的標記次數，不是支持度、好感度或投票意向。
+- 本頁統計本系統歸類至各候選人的新聞結果；部分 Google News 相關結果未必在標題直接出現姓名，因此不等同嚴格的姓名提及次數，也不是支持度、好感度或投票意向。
 - 同一則新聞若同時涉及多人，可能分別計入；新聞清單會以標題去重後呈現。
 - Google News 有搜尋結果上限與相關性擴張，累計數不適合當成長期人氣排行。
 - 議題分類來自標題關鍵字，可一篇多標籤；沒有進行情緒或立場判定。
-- 六都市長官方資格審定名單共 23 人；本站僅涵蓋其中 12 位主要候選人，所有顯示人物都在中選會 2026-10-16 審定名單內，但不代表完整候選人名單。
+- 六都市長官方資格審定名單共 23 人；本站追蹤其中 12 位確定參選人，並非完整候選人名單。
 - 政策頁依公開資料區分正式政見、現任施政重點、近期公開主張與尚待公布；摘要不等於候選人完整政見書。
 """
 )
 q1, q2, q3, q4 = st.columns(4)
 q1.metric("資料涵蓋", f"{df['date'].min():%Y-%m-%d}", f"至 {latest_date:%Y-%m-%d}")
-q2.metric("主要候選人", len(active_pairs))
+q2.metric("確定參選人（本站追蹤）", f"{len(active_pairs)}／23")
 q3.metric("特徵資料", f"{len(df):,} 列")
 q4.metric("原始標記新聞", f"{len(articles):,} 筆")
 
 with st.expander("預測模型說明與限制"):
     st.markdown("""
-- 模型：各人物獨立的單變量 LSTM，以最近 7 個日曆日序列逐日遞迴預測未來 7 日新聞提及量。
+- 模型：各候選人獨立的單變量 LSTM，以最近 7 個日曆日序列逐日遞迴預測未來 7 日新聞標記量。
 - 用途：找出值得優先追蹤的媒體注意力變化，不是選票、民調、支持度或勝選機率。
 - 限制：目前沒有納入候選人行程、民調、議題情緒或突發事件，也尚未展示正式回測誤差與可信區間。
 - 解讀：預測上升代表模型依歷史軌跡推估報導可能增加；實際結果仍可能因事件快速改變。
@@ -865,15 +872,15 @@ with st.expander("預測模型說明與限制"):
 with st.expander("資料品質檢查"):
     feature_people = set(df["candidate"].unique())
     raw_people = set(articles["candidate"].unique()) if not articles.empty else set()
-    st.write(f"設定人物數：{len(active_candidates)}；特徵資料人物數：{len(feature_people)}；新聞資料人物數：{len(raw_people)}")
+    st.write(f"設定候選人數：{len(active_candidates)}；特徵資料候選人數：{len(feature_people)}；新聞資料候選人數：{len(raw_people)}")
     missing_raw = sorted(feature_people - raw_people)
     if missing_raw:
         st.warning("沒有原始新聞可追溯：" + "、".join(missing_raw))
     else:
-        st.success("所有目前顯示人物都有原始新聞資料可追溯。")
+        st.success("所有目前顯示候選人都有原始新聞資料可追溯。")
     st.caption(f"原始檔：{raw_file.name if raw_file else '無'}")
 
 st.markdown(
-    "<div class='section-nav'><a href='#news'>← 新聞與議題</a><a href='#top'>↑ 回頂端</a><a href='#overview'>六都對決 →</a></div>",
+    "<div class='section-nav'><a href='#news'>← 新聞與議題</a><a href='#top'>↑ 回頂端</a><a href='#overview'>六都比較 →</a></div>",
     unsafe_allow_html=True,
 )

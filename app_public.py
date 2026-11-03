@@ -131,7 +131,7 @@ h1,h2,h3 { letter-spacing:-.035em; color:var(--ink); }
 .chip:hover { background:rgba(255,255,255,.18); border-color:rgba(255,255,255,.62); transform:translateY(-1px); }
 .section-anchor { scroll-margin-top:76px; }
 [data-testid="stAppViewContainer"] { scroll-behavior:smooth; }
-.back-to-top { position:fixed; right:18px; bottom:22px; z-index:9999; display:inline-flex; align-items:center;
+.back-to-top { position:fixed; right:18px; bottom:96px; z-index:9999; display:inline-flex; align-items:center;
   gap:5px; padding:10px 14px; border-radius:999px; background:#4c1d95; color:white !important;
   text-decoration:none !important; font-size:13px; font-weight:800; box-shadow:0 8px 24px rgba(76,29,149,.28); }
 .back-to-top:hover { background:#6d28d9; transform:translateY(-1px); }
@@ -215,7 +215,7 @@ h1,h2,h3 { letter-spacing:-.035em; color:var(--ink); }
   .hero .chips { display:flex; flex-wrap:nowrap; overflow-x:auto; padding-bottom:5px; scrollbar-width:thin;
     -webkit-overflow-scrolling:touch; }
   .hero .chip { flex:0 0 auto; white-space:nowrap; }
-  .back-to-top { right:14px; bottom:calc(112px + env(safe-area-inset-bottom, 0px)); padding:9px 12px; font-size:12px; }
+  .back-to-top { right:14px; bottom:calc(160px + env(safe-area-inset-bottom, 0px)); padding:9px 12px; font-size:12px; }
   .section-nav { margin:18px 0 24px; gap:6px; }
   .section-nav a { padding:9px 5px; font-size:11px; }
   .mobile-nav { position:fixed; left:0; right:0; bottom:0; z-index:9998; display:flex; align-items:stretch; justify-content:space-around;

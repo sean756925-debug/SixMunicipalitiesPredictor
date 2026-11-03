@@ -215,7 +215,7 @@ h1,h2,h3 { letter-spacing:-.035em; color:var(--ink); }
   .hero .chips { display:flex; flex-wrap:nowrap; overflow-x:auto; padding-bottom:5px; scrollbar-width:thin;
     -webkit-overflow-scrolling:touch; }
   .hero .chip { flex:0 0 auto; white-space:nowrap; }
-  .back-to-top { right:14px; bottom:76px; padding:9px 12px; font-size:12px; }
+  .back-to-top { right:14px; bottom:calc(112px + env(safe-area-inset-bottom, 0px)); padding:9px 12px; font-size:12px; }
   .section-nav { margin:18px 0 24px; gap:6px; }
   .section-nav a { padding:9px 5px; font-size:11px; }
   .mobile-nav { position:fixed; left:0; right:0; bottom:0; z-index:9998; display:flex; align-items:stretch; justify-content:space-around;
